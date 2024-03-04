@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms, models
+from torchvision import datasets, transforms
 from torchvision.io import read_image
 from torchvision.models import resnet50, ResNet50_Weights
 import numpy as np
@@ -20,10 +20,15 @@ from pytorch_grad_cam import CAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
 # %%
+# Set main path to repo root directory
+main = Path(".").resolve()
+main
+
+# %%
 # Load imagenette trainset
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-train_dataset = datasets.Imagenette("/homes/gws/hjyu/masksearch/ExplainAdversarial/data",
-                                    size='full', split='train', transform=transform, download=False)
+train_dataset = datasets.Imagenette(main / "data", size='full',
+                                    split='train', transform=transform, download=False)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True)
 
 # %%
@@ -55,18 +60,18 @@ for epoch in range(num_epochs):
             loss.backward()
             optimizer.step()
 
-torch.save(model.state_dict(), "/homes/gws/hjyu/masksearch/ExplainAdversarial/checkpoints/resnet50_imagenette.pth")
+torch.save(model.state_dict(), main / "checkpoints/resnet50_imagenette.pth")
 
 # %%
 # Load imagenette testset
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-test_dataset = datasets.Imagenette("/homes/gws/hjyu/masksearch/ExplainAdversarial/data",
-                                    size='full', split='val', transform=transform, download=False)
+test_dataset = datasets.Imagenette(main / "data", size='full',
+                                   split='val', transform=transform, download=False)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16, shuffle=False)
 
 # %%
 # Load checkpoint
-checkpoint = torch.load("/homes/gws/hjyu/masksearch/ExplainAdversarial/checkpoints/resnet50_imagenette.pth")
+checkpoint = torch.load(main / "checkpoints/resnet50_imagenette.pth")
 model = resnet50()
 
 print("CUDA Available: ", torch.cuda.is_available())
@@ -103,6 +108,7 @@ def fgsm_attack(image, epsilon, data_grad):
     return perturbed_image
 
 # %%
+# Define custom dataset that additionally returns image path
 class ImagenettePath(datasets.Imagenette):
     def __getitem__(self, idx):
         path, label = self._samples[idx]
@@ -114,6 +120,7 @@ class ImagenettePath(datasets.Imagenette):
         return image, label, path
 
 # %%
+# Helper function that converts an image tensor to displayable format
 def convert(input_image, multiply=False, BGR=False):
     multiplier = 255.0 if multiply else 1.0
     image = np.moveaxis(input_image[0].detach().cpu().numpy() * multiplier, 0, 2)
@@ -122,18 +129,18 @@ def convert(input_image, multiply=False, BGR=False):
     return image
 
 # %%
-# Download a new copy of imagenette; then load testset with ImagenettePath
+# Get a new copy of imagenette; then load testset with ImagenettePath
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-perturbing_dataset = ImagenettePath("/homes/gws/hjyu/masksearch/ExplainAdversarial/perturbed_data",
-                                    size='full', split='val', transform=transform, download=False)
+perturbing_dataset = ImagenettePath(main / "perturbed_data", size='full',
+                                    split='val', transform=transform, download=False)
 perturbing_loader = torch.utils.data.DataLoader(perturbing_dataset, batch_size=1, shuffle=False)
 
 # %%
-# Perturb images in testset
+# Perturb images in testset; report accuracy
 criterion = nn.CrossEntropyLoss()
 epsilon = 0.3
 
-all_predictions_attacked = []
+all_predictions = []
 all_labels = []
 with tqdm(perturbing_loader, desc=f"Attack", total=len(perturbing_loader)) as tq:
     for image, target, path in tq:
@@ -143,31 +150,37 @@ with tqdm(perturbing_loader, desc=f"Attack", total=len(perturbing_loader)) as tq
         prediction = y_hat.argmax(1)
         if prediction.item() != y.item():
             continue
+
         loss = criterion(y_hat, target)
         model.zero_grad()
         loss.backward()
         perturbed_image = fgsm_attack(image, epsilon, image.grad.data)
+
         path_split = path[0].split("/")
-        path_attacked = "/".join(path_split[:-1]) + "/" + path_split[-1][:-5] + "_attacked.JPEG"
-        cv2.imwrite(path_attacked, convert(perturbed_image, multiply=True, BGR=True))
-        y_attacked = model(perturbed_image)
-        prediction_attacked = y_attacked.argmax(1).tolist()
+        path_attacking = "/".join(path_split[:-1]) + "/" + path_split[-1][:-5] + "_attacked.JPEG"
+        cv2.imwrite(path_attacking, convert(perturbed_image, multiply=True, BGR=True))
+
+        perturbed_y_hat = model(perturbed_image)
+        perturbed_prediction = perturbed_y_hat.argmax(1).tolist()
         label = y.tolist()
-        all_predictions_attacked += prediction_attacked
+
+        all_predictions += perturbed_prediction
         all_labels += label
-all_predictions_attacked = torch.Tensor(all_predictions_attacked)
+all_predictions = torch.Tensor(all_predictions)
 all_labels = torch.Tensor(all_labels)
-accuracy = torch.sum(torch.eq(all_predictions_attacked, all_labels)).item() / all_predictions_attacked.size(-1)
+accuracy = torch.sum(torch.eq(all_predictions, all_labels)).item() / all_predictions.size(-1)
 # Accuracy = 0.11137132448607859
 print(f"Accuracy: {accuracy}")
 
 # %%
+# Load perturbed testset
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-perturbed_dataset = datasets.Imagenette("/homes/gws/hjyu/masksearch/ExplainAdversarial/perturbed_data",
-                                        size='full', split='val', transform=transform, download=False)
+perturbed_dataset = datasets.Imagenette(main / "perturbed_data", size='full',
+                                        split='val', transform=transform, download=False)
 perturbed_loader = torch.utils.data.DataLoader(perturbed_dataset, batch_size=1, shuffle=True)
 
 # %%
+# Compute saliency maps
 with tqdm(perturbed_loader, desc=f"Saliency", total=len(perturbed_loader)) as tq:
     i = 0
     for image, target in tq:
