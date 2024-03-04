@@ -16,6 +16,8 @@ from tqdm.notebook import tqdm
 from pathlib import Path
 from PIL import Image
 import cv2
+from pytorch_grad_cam import CAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
 
 # %%
 # Load imagenette trainset
@@ -29,7 +31,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle
 weights = ResNet50_Weights.DEFAULT
 model = resnet50(weights=weights)
 
-print("CUDA Available: ",torch.cuda.is_available())
+print("CUDA Available: ", torch.cuda.is_available())
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
@@ -67,7 +69,7 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=16, shuffle=F
 checkpoint = torch.load("/homes/gws/hjyu/masksearch/ExplainAdversarial/checkpoints/resnet50_imagenette.pth")
 model = resnet50()
 
-print("CUDA Available: ",torch.cuda.is_available())
+print("CUDA Available: ", torch.cuda.is_available())
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
@@ -112,6 +114,14 @@ class ImagenettePath(datasets.Imagenette):
         return image, label, path
 
 # %%
+def convert(input_image, multiply=False, BGR=False):
+    multiplier = 255.0 if multiply else 1.0
+    image = np.moveaxis(input_image[0].detach().cpu().numpy() * multiplier, 0, 2)
+    if BGR:
+        image = image[:, :, ::-1]
+    return image
+
+# %%
 # Download a new copy of imagenette; then load testset with ImagenettePath
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
 perturbing_dataset = ImagenettePath("/homes/gws/hjyu/masksearch/ExplainAdversarial/perturbed_data",
@@ -139,7 +149,7 @@ with tqdm(perturbing_loader, desc=f"Attack", total=len(perturbing_loader)) as tq
         perturbed_image = fgsm_attack(image, epsilon, image.grad.data)
         path_split = path[0].split("/")
         path_attacked = "/".join(path_split[:-1]) + "/" + path_split[-1][:-5] + "_attacked.JPEG"
-        cv2.imwrite(path_attacked, np.moveaxis(perturbed_image[0].detach().cpu().numpy() * 255.0, 0, 2)[:, :, ::-1])
+        cv2.imwrite(path_attacked, convert(perturbed_image, multiply=True, BGR=True))
         y_attacked = model(perturbed_image)
         prediction_attacked = y_attacked.argmax(1).tolist()
         label = y.tolist()
@@ -153,11 +163,25 @@ print(f"Accuracy: {accuracy}")
 
 # %%
 transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-perturbed_dataset = ImagenettePath("/homes/gws/hjyu/masksearch/ExplainAdversarial/perturbed_data",
-                                    size='full', split='val', transform=transform, download=False)
-perturbed_loader = torch.utils.data.DataLoader(perturbed_dataset, batch_size=1, shuffle=False)
+perturbed_dataset = datasets.Imagenette("/homes/gws/hjyu/masksearch/ExplainAdversarial/perturbed_data",
+                                        size='full', split='val', transform=transform, download=False)
+perturbed_loader = torch.utils.data.DataLoader(perturbed_dataset, batch_size=1, shuffle=True)
 
 # %%
-len(perturbed_loader)
+with tqdm(perturbed_loader, desc=f"Saliency", total=len(perturbed_loader)) as tq:
+    i = 0
+    for image, target in tq:
+        i += 1
+        target_layer = model.layer4[-1]
+        cam = CAM(model=model,  target_layer=target_layer, use_cuda=torch.cuda.is_available())
+        grayscale_cam = cam(input_tensor=image, target_category=target.item(), method="gradcam")
+        converted_image = convert(image)
+        plt.figure()
+        plt.imshow(converted_image)
+        plt.figure()
+        visualization = show_cam_on_image(converted_image, grayscale_cam)
+        plt.imshow(visualization)
+        if i == 10:
+            break
 
 # %%
