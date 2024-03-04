@@ -1,4 +1,4 @@
-# ExplainAdverserial
+# ExplainAdversarial
 
 MaskSearch repo: https://github.com/uwdb/MaskSearch
 
