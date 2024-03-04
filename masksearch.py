@@ -854,26 +854,16 @@ from multiprocessing import Pool
 
 sys.path.append("~/masksearch/ExplainAdversarial")
 import imagenet_mp_vars
-import wilds_mp_vars
 
 
 def get_global_vars(dataset):
-    if dataset == "imagenet":
-        cam_map = imagenet_mp_vars.cam_map
-        object_detection_map = imagenet_mp_vars.object_detection_map
-        cam_size_y = imagenet_mp_vars.cam_size_y
-        cam_size_x = imagenet_mp_vars.cam_size_x
-        available_coords = imagenet_mp_vars.available_coords
-        hist_size = imagenet_mp_vars.hist_size
-        bin_width = imagenet_mp_vars.bin_width
-    else:
-        cam_map = wilds_mp_vars.cam_map
-        object_detection_map = wilds_mp_vars.object_detection_map
-        cam_size_y = wilds_mp_vars.cam_size_y
-        cam_size_x = wilds_mp_vars.cam_size_x
-        available_coords = wilds_mp_vars.available_coords
-        hist_size = wilds_mp_vars.hist_size
-        bin_width = wilds_mp_vars.bin_width
+    cam_map = imagenet_mp_vars.cam_map
+    object_detection_map = imagenet_mp_vars.object_detection_map
+    cam_size_y = imagenet_mp_vars.cam_size_y
+    cam_size_x = imagenet_mp_vars.cam_size_x
+    available_coords = imagenet_mp_vars.available_coords
+    hist_size = imagenet_mp_vars.hist_size
+    bin_width = imagenet_mp_vars.bin_width
     return (
         cam_map,
         object_detection_map,
