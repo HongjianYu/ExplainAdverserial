@@ -1,0 +1,6 @@
+*.pyc
+*.pth
+*.JPEG
+*.csv
+*.tgz
+*.pkl
