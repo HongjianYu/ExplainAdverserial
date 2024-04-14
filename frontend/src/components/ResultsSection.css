@@ -1,0 +1,24 @@
+/* src/components/ResultsSection.css */
+
+.results-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow-y: auto;
+    height: calc(100vh - 150px);
+    padding: 10px;
+}
+
+.result-image {
+    width: calc((100% - 20px) / 3); /* Three images per row */
+    height: auto;
+    object-fit: cover;
+}
+
+@media (max-width: 600px) {
+    .result-image {
+        width: calc((100% - 10px) / 2); /* Two images per row for smaller screens */
+    }
+}
