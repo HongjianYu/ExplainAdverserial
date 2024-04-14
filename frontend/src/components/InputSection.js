@@ -1,7 +1,7 @@
 // src/components/InputSection.js
 import React, { useState } from 'react';
 import QueryCommand from './QueryCommand';
-import './InputSection.css'; // Make sure to create this CSS file
+import './InputSection.css';
 
 function InputSection({ onSearchResults, onModeChange }) {
     const [mode, setMode] = useState('Top-K');

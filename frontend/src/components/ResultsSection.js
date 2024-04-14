@@ -1,6 +1,6 @@
 // src/components/ResultsSection.js
 import React from 'react';
-import './ResultsSection.css'; // Assuming you have styling defined in ResultsSection.css
+import './ResultsSection.css';
 
 function ResultsSection({ imageIds, mode, onSelectImage }) {
     console.log('ResultsSection mode:', mode);
