@@ -15,9 +15,13 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 # Environment set up
 
 `cd backend`
+
 `pip install Flask`
-`npm install cors`
+
+`pip install flask-cors`
+
 `cd ../frontend`
+
 `npm install react-modal`
 
 
