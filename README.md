@@ -6,6 +6,8 @@ Website: https://db.cs.washington.edu/projects/neuralartifactdb
 
 Preprint: https://arxiv.org/pdf/2305.02375.pdf
 
+Demo Preprint: https://arxiv.org/pdf/2404.06563.pdf
+
 
 # Getting Started with MaskSearch GUI
 
