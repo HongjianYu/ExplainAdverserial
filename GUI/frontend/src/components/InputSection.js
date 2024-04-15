@@ -18,30 +18,45 @@ function InputSection({ onSearchResults, onModeChange }) {
 
 
     const fetchQueryCommand = async (path, body) => {
-        const response = await fetch(`http://localhost:5000${path}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
-        return response.json();
+        try {
+            const response = await fetch(`http://localhost:8080${path}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+            if (!response.ok) {
+                const errorBody = await response.text();  // Server might send non-JSON errors
+                console.error('HTTP error', response.status, errorBody);
+                throw new Error(`HTTP error ${response.status}: ${errorBody}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            throw error;
+        }
     };
 
     const handleStartQuery = async () => {
         let path, body;
-        if (mode === 'Top-K') {
-            path = '/api/topk_search';
-            body = { k, roi, pixelUpperBound, pixelLowerBound, order };
-        } else {
-            path = '/api/filter_search';
-            body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
-        }
+        try {
+            if (mode === 'Top-K') {
+                path = '/api/topk_search';
+                body = { k: parseInt(k), roi, pixelUpperBound, pixelLowerBound, order };
+            } else {
+                path = '/api/filter_search';
+                body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
+            }
 
-        const data = await fetchQueryCommand(path, body);
-        setQueryCommand(data.query_command);
-        onSearchResults(data.image_ids);
-        setIsQueryActive(true); // Enable the Augment button
+            const data = await fetchQueryCommand(path, body);
+            setQueryCommand(data.query_command);
+            onSearchResults(data.image_ids);
+            setIsQueryActive(true); // Enable the Augment button
+        } catch (error) {
+            console.error("Failed to start query:", error);
+            throw error;
+        }
     };
 
     const handleShowExecution = () => {
