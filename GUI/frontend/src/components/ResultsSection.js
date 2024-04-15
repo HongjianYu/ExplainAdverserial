@@ -11,7 +11,7 @@ function ResultsSection({ imageIds, mode, onSelectImage }) {
             {imageIds.map((id) => (
                 <img
                     key={id}
-                    src={`http://localhost:5000/${imagePath}/${id}.jpg`}
+                    src={`http://localhost:8000/${imagePath}/${id}.jpg`}
                     alt={`Image ${id}`}
                     onClick={() => onSelectImage(id)}
                 />

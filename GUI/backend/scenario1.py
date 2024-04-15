@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app)
 
 @app.route('/api/topk_search', methods=['POST'])
 def topk_search():
@@ -52,4 +52,4 @@ def filter_image(filename):
     return send_from_directory('filter_results', filename)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=8000)
