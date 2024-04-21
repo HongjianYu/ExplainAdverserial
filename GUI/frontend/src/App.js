@@ -1,8 +1,11 @@
 // src/App.js
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import InputSection from './components/InputSection';
 import ResultsSection from './components/ResultsSection';
 import ImageSelection from './components/ImageSelection';
+import DataPreparation from './components/DataPreparation';
+
 import './App.css';
 
 function App() {
@@ -31,20 +34,35 @@ function App() {
   };
 
   return (
+    <Router>
       <div className="app">
-        <header className="app-header">MaskSearch</header>
-        <div className="main-content">
-          <InputSection onSearchResults={handleSearchResults} onModeChange={handleModeChange} />
-          <ResultsSection imageIds={imageIds} onSelectImage={handleImageClick} mode={mode} />
-        </div>
-        {selectedImageId && (
-            <ImageSelection
-                isOpen={!!selectedImageId}
-                imageId={selectedImageId}
-                onRequestClose={closeImageSelection}
-            />
-        )}
+        <header className="app-header">
+          MaskSearch
+          {/* Link to Data Preparation page */}
+          {/* <nav>
+            <Link to="/data-preparation">Data Preparation</Link>
+          </nav> */}
+        </header>
+        <Routes>
+          <Route path="/data-preparation" element={<DataPreparation />} />
+          <Route path="/input" element={
+            <div className="main-content">
+              <InputSection onSearchResults={handleSearchResults} onModeChange={handleModeChange} />
+              <ResultsSection imageIds={imageIds} onSelectImage={handleImageClick} mode={mode} />
+              {selectedImageId && (
+                  <ImageSelection
+                      isOpen={!!selectedImageId}
+                      imageId={selectedImageId}
+                      onRequestClose={closeImageSelection}
+                  />
+              )}
+            </div>
+          } />
+          {/* Redirect from home to /data-preparation */}
+          <Route path="/" element={<DataPreparation />} />
+        </Routes>
       </div>
+    </Router>
   );
 }
 
