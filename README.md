@@ -1,10 +1,10 @@
 # MaskSearchDemo
 
-MaskSearch repo: https://github.com/uwdb/MaskSearch
+MaskSearch Repo: https://github.com/uwdb/MaskSearch
 
 Website: https://db.cs.washington.edu/projects/neuralartifactdb
 
-Preprint: https://arxiv.org/pdf/2305.02375.pdf
+MaskSearch Preprint: https://arxiv.org/pdf/2305.02375.pdf
 
 Demo Preprint: https://arxiv.org/pdf/2404.06563.pdf
 
