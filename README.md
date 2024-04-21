@@ -17,18 +17,16 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 ### Environment set up
 
 ```
-cd backend
 pip install Flask
 pip install flask-cors
-cd ../frontend
+cd ./GUI/frontend
 npm install react-modal
 ```
 
 ### Run the project
 
 ```
-cd backend
-python scenario1.py
-cd frontend
+python ./GUI/backend/scenario1.py
+cd ./GUI/frontend
 npm start
 ```
