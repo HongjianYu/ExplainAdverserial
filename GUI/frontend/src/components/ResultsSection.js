@@ -4,7 +4,14 @@ import './ResultsSection.css';
 
 function ResultsSection({ imageIds, mode, onSelectImage }) {
     console.log('ResultsSection mode:', mode);
-    const imagePath = mode === 'Top-K' ? 'topk_results' : 'filter_results';
+    let imagePath;
+    if (mode === 'Top-K') {
+        imagePath = 'topk_results';
+    } else if (mode === 'Filter') {
+        imagePath = 'filter_results';
+    } else if (mode === 'Aggregation') {
+        imagePath = 'aggregate_results';
+    }
 
     return (
         <div className="results-section">
