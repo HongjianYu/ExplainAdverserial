@@ -33,7 +33,12 @@ function InputSection({ onSearchResults, onModeChange }) {
         if (mode === 'Top-K') {
             path = '/api/topk_search';
             body = { k, roi, pixelUpperBound, pixelLowerBound, order };
-        } else {
+        } 
+        if (mode === 'Filter') {
+            path = '/api/filter_search';
+            body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
+        }
+        if (mode === 'Aggregation') {
             path = '/api/filter_search';
             body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
         }
@@ -68,11 +73,11 @@ function InputSection({ onSearchResults, onModeChange }) {
     return (
         <div className="input-section">
             <div className="header">
-                <h2 className="title">{mode} Query</h2>
+                <h2 className="title">{mode}</h2>
                 <div className="mode-switch">
                     <button className={mode === 'Top-K' ? 'active' : ''} onClick={() => handleModeChange('Top-K')}>Top-K</button>
                     <button className={mode === 'Filter' ? 'active' : ''} onClick={() => handleModeChange('Filter')}>Filter</button>
-                    <button className={mode === ''}>Aggregation</button>
+                    <button className={mode === 'Aggregation' ? 'active' : ''} onClick={() => handleModeChange('Aggregation')}>Aggregation</button>
                 </div>
             </div>
             {mode === 'Top-K' ? (
@@ -121,6 +126,59 @@ function InputSection({ onSearchResults, onModeChange }) {
                                 <option key={option} value={option}>{option}</option>
                             ))}
                         </select>
+                    </div>
+                </>
+            ) : mode === 'Filter' ? (
+                <>
+                    {/* Filter specific fields */}
+                    <div className="input-container">
+                        <label htmlFor="threshold" className="input-label">Threshold:</label>
+                        <div className="threshold-container">
+                            <select
+                                id="thresholdDirection"
+                                value={thresholdDirection}
+                                onChange={(e) => setThresholdDirection(e.target.value)}
+                                className="threshold-field"
+                            >
+                                <option value=">">&gt;</option>
+                                <option value="<">&lt;</option>
+                            </select>
+                            <input
+                                id="thresholdValue"
+                                type="text"
+                                value={threshold}
+                                onChange={(e) => setThreshold(e.target.value)}
+                                className="threshold-field"
+                            />
+                        </div>
+                    </div>
+                    <div className="input-container">
+                        <label htmlFor="ROI" className="input-label">ROI:</label>
+                        <select id="roi" value={roi} onChange={(e) => setRoi(e.target.value)} className="input-field">
+                            {['object bounding box', 'customizing box'].map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="input-container">
+                        <label htmlFor="pixelUpperBound" className="input-label">Pixel Value Upper Bound:</label>
+                        <input
+                            id="pixelUpperBound"
+                            type="text"
+                            value={pixelUpperBound}
+                            onChange={(e) => setPixelUpperBound(e.target.value)}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="input-container">
+                        <label htmlFor="pixelLowerBound" className="input-label">Pixel Value Lower Bound:</label>
+                        <input
+                            id="pixelLowerBound"
+                            type="text"
+                            value={pixelLowerBound}
+                            onChange={(e) => setPixelLowerBound(e.target.value)}
+                            className="input-field"
+                        />
                     </div>
                 </>
             ) : (
@@ -176,7 +234,7 @@ function InputSection({ onSearchResults, onModeChange }) {
                         />
                     </div>
                 </>
-            )}
+            ) }
             <div className="halfsize-buttons">
                 <button className="start-halfsize-btn" onClick={handleStartQuery}>
                     Start Query
