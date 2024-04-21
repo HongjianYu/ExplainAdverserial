@@ -1,24 +1,24 @@
-Misclassification rate in 190 images: 0.31052631578947365
-Misclassification rate in top 20: 0.44999999999999996
-Attack rate in 190 images: 0.5
-Attack rate in top 20: 0.8
-dispersion=0.27494281045751634, classification=True, attack=True
-dispersion=0.25972222222222224, classification=False, attack=True
-dispersion=0.25882352941176473, classification=False, attack=True
-dispersion=0.25365196078431373, classification=False, attack=True
-dispersion=0.2397467320261438, classification=False, attack=True
-dispersion=0.23348856209150326, classification=True, attack=True
-dispersion=0.22306372549019607, classification=True, attack=True
-dispersion=0.1974591503267974, classification=True, attack=False
-dispersion=0.19679738562091503, classification=False, attack=True
-dispersion=0.17745098039215687, classification=True, attack=True
-dispersion=0.1609232026143791, classification=True, attack=False
-dispersion=0.13532679738562092, classification=True, attack=True
-dispersion=0.13211601307189544, classification=False, attack=True
-dispersion=0.12965686274509805, classification=False, attack=True
-dispersion=0.12794934640522876, classification=True, attack=True
-dispersion=0.12344771241830066, classification=False, attack=True
-dispersion=0.12227124183006537, classification=True, attack=False
-dispersion=0.11405228758169934, classification=True, attack=False
-dispersion=0.11318627450980392, classification=True, attack=True
-dispersion=0.10608660130718954, classification=False, attack=True
+Misclassification rate in 7768 images: 0.09191555097837278
+Misclassification rate in top 20: 0.0
+Attack rate in 7768 images: 0.49472193614830073
+Attack rate in top 20: 0.7
+dispersion=119911, classification=True, attack=True
+dispersion=112494, classification=True, attack=False
+dispersion=112244, classification=True, attack=True
+dispersion=111636, classification=True, attack=True
+dispersion=109952, classification=True, attack=True
+dispersion=109779, classification=True, attack=True
+dispersion=109006, classification=True, attack=True
+dispersion=108011, classification=True, attack=True
+dispersion=107631, classification=True, attack=False
+dispersion=107168, classification=True, attack=False
+dispersion=106790, classification=True, attack=False
+dispersion=104623, classification=True, attack=True
+dispersion=103092, classification=True, attack=True
+dispersion=103010, classification=True, attack=False
+dispersion=102660, classification=True, attack=True
+dispersion=102485, classification=True, attack=True
+dispersion=102216, classification=True, attack=False
+dispersion=100534, classification=True, attack=True
+dispersion=99290, classification=True, attack=True
+dispersion=98986, classification=True, attack=True
