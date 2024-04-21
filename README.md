@@ -9,12 +9,12 @@ Preprint: https://arxiv.org/pdf/2305.02375.pdf
 Demo Preprint: https://arxiv.org/pdf/2404.06563.pdf
 
 
-# Getting Started with MaskSearch GUI
+## Getting Started with MaskSearch GUI
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 
-# Environment set up
+### Environment set up
 
 `cd backend`
 
@@ -27,7 +27,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 `npm install react-modal`
 
 
-# Run the project
+### Run the project
 
 `cd backend`
 `python scenario1.py`
