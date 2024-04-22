@@ -4,3 +4,7 @@
 *.csv
 *.tgz
 *.pkl
+*.bak
+*.dat
+*.dir
+*.npy

@@ -45,18 +45,18 @@ if __name__ == '__main__':
         hist_edges.append(bin_width * i)
     hist_edges.append(256)
     print(hist_edges)
-    cam_size_x = 224
-    cam_size_y = 224
+    cam_size_x = 600
+    cam_size_y = 400
 
-    total_images = 1331167
-    cam_map = shelve.open('/data/explain_imagenet/shelves/imagenet_cam_map.shelve')
-    
-    filename = f'/data/explain_imagenet/npy/trial_imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_memmap_suffix.npy'
+    total_images = 7768
+    cam_map = shelve.open('./Scenario2Adversarial/serialized/cam_map')
+
+    filename = f'./Scenario2Adversarial/npy/trial_imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_memmap_suffix.npy'
     hist_prefix = np.memmap(filename, dtype=np.int64, mode='w+', shape=(total_images, (cam_size_y // available_coords) + 1, (cam_size_x // available_coords) + 1, hist_size))
 
     # hist_prefix = np.zeros((total_images, (cam_size_y // available_coords) + 1, (cam_size_x // available_coords) + 1, hist_size), dtype=np.int64)
 
-    num_processes = mp.cpu_count()
+    num_processes = mp.cpu_count() // 2
     chunk_size = total_images // num_processes
     processes = []
 
