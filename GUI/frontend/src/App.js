@@ -54,6 +54,7 @@ function App() {
                       isOpen={!!selectedImageId}
                       imageId={selectedImageId}
                       onRequestClose={closeImageSelection}
+                      mode={mode}
                   />
               )}
             </div>

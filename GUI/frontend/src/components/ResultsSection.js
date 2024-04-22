@@ -10,7 +10,7 @@ function ResultsSection({ imageIds, mode, onSelectImage }) {
     } else if (mode === 'Filter') {
         imagePath = 'filter_results';
     } else if (mode === 'Aggregation') {
-        imagePath = 'aggregate_results';
+        imagePath = 'aggregation_results';
     }
 
     return (

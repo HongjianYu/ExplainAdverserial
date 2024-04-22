@@ -72,7 +72,7 @@ def filter_image(filename):
 
 @app.route('/aggregation_results/<filename>')
 def aggregation_image(filename):
-    return send_from_directory('aggregate_results', filename)
+    return send_from_directory('aggregation_results', filename)
 
 if __name__ == '__main__':
     app.run(port=8000)
