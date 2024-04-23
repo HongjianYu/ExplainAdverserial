@@ -28,12 +28,14 @@ def process_chunk(start_idx, end_idx):
         # hist_prefix itself is now reverse cumulative
         hist_prefix[generic_image_id] = np.cumsum(hist_prefix[generic_image_id, :, :, ::-1], axis=2)[:, :, ::-1]
 
+    hist_prefix.flush()
+
     # print(f"Processed chunk: {start_idx} to {end_idx-1}")
 
 
 if __name__ == '__main__':
 
-    available_coords = 14
+    available_coords = 20
     hist_size = 16
 
     print(f"Building index for imagenet with available_coords: {available_coords} and hist_size: {hist_size}")
@@ -51,8 +53,8 @@ if __name__ == '__main__':
     total_images = 7768
     cam_map = shelve.open('./Scenario2Adversarial/serialized/cam_map')
 
-    filename = f'./Scenario2Adversarial/npy/trial_imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_memmap_suffix.npy'
-    hist_prefix = np.memmap(filename, dtype=np.int64, mode='w+', shape=(total_images, (cam_size_y // available_coords) + 1, (cam_size_x // available_coords) + 1, hist_size))
+    memmap_filename = f'./Scenario2Adversarial/npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_memmap_suffix.npy'
+    hist_prefix = np.memmap(memmap_filename, dtype=np.int64, mode='w+', shape=(total_images, (cam_size_y // available_coords) + 1, (cam_size_x // available_coords) + 1, hist_size))
 
     # hist_prefix = np.zeros((total_images, (cam_size_y // available_coords) + 1, (cam_size_x // available_coords) + 1, hist_size), dtype=np.int64)
 
@@ -77,3 +79,6 @@ if __name__ == '__main__':
 
     end = time.time()
     print(f"Index building time for imagenet: {end - start}")
+
+    np_filename = f'./Scenario2Adversarial/npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy'
+    np.save(np_filename, hist_prefix[:])

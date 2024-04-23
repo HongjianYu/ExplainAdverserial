@@ -56,11 +56,17 @@ hist_edges.append(256)
 cam_size_y = 400
 cam_size_x = 600
 
-available_coords = 14
+available_coords = 20
 
 in_memory_index_suffix = np.load(
-    f"./npy/trial_imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_memmap_suffix.npy",
-    allow_pickle=True
+    f"./npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy"
 )
 
 # %%
+region_area_threshold = 5000
+region = "object"
+threshold = 0.8
+lv = 0.8
+uv = 1.0
+reverse = True
+k = 25
