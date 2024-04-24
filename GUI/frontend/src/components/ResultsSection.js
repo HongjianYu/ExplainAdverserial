@@ -8,7 +8,9 @@ function ResultsSection({ imageIds, mode, onSelectImage }) {
     if (mode === 'Top-K') {
         imagePath = 'topk_results';
     } else if (mode === 'Filter') {
-        imagePath = 'filter_results';
+        imagePath = 'topk_results';
+    } else if (mode === 'Augment') {
+        imagePath = 'augment_results';
     } else if (mode === 'Aggregation') {
         imagePath = 'aggregation_results';
     }
