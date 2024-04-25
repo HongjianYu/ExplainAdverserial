@@ -2,9 +2,11 @@
 import React from 'react';
 import './ResultsSection.css';
 
+// TODO: Add the field for augment
 function ResultsSection({ imageIds, mode, onSelectImage }) {
     console.log('ResultsSection mode:', mode);
     let imagePath;
+    // TODO: Add another check for augment or noth
     if (mode === 'Top-K') {
         imagePath = 'topk_results';
     } else if (mode === 'Filter') {

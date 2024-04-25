@@ -12,6 +12,7 @@ function App() {
   const [imageIds, setImageIds] = useState([]);
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
+  const [isAugment, setAugment] = useState(false);
 
   // Handle the search results from InputSection
   const handleSearchResults = (results) => {
@@ -33,6 +34,11 @@ function App() {
     setSelectedImageId(null);
   };
 
+  // TODO: Keep track of the Augment status
+  const handleStartAugment = (status) => {
+    setAugment(status);
+  }
+
   return (
     <Router>
       <div className="app">
@@ -47,6 +53,7 @@ function App() {
           <Route path="/data-preparation" element={<DataPreparation />} />
           <Route path="/input" element={
             <div className="main-content">
+              {/* TODO: add a field for augment in both InputSection and ResultsSection */}
               <InputSection onSearchResults={handleSearchResults} onModeChange={handleModeChange} />
               <ResultsSection imageIds={imageIds} onSelectImage={handleImageClick} mode={mode} />
               {selectedImageId && (

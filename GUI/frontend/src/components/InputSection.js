@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import QueryCommand from './QueryCommand';
 import './InputSection.css';
 
+// TODO: Add the field for augment
 function InputSection({ onSearchResults, onModeChange }) {
     const [mode, setMode] = useState('Top-K');
     const [k, setK] = useState('5');
@@ -58,6 +59,7 @@ function InputSection({ onSearchResults, onModeChange }) {
         // const data = await response.json();
         // console.log('Augment result:', data.result);
         setIsPathActive(true);
+        // TODO: Set the status of augment to true, other necessary implementation for augment
     };
 
     const handleShowPath = () => {
@@ -68,6 +70,7 @@ function InputSection({ onSearchResults, onModeChange }) {
         setMode(newMode); // Update local state
         setIsQueryActive(false); // Reset the active state when changing modes
         onModeChange(newMode); // Inform the parent component about the mode change
+        // TODO: Reset the status of augment to false when changing modes
     };
 
     return (
