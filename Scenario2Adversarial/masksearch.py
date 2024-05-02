@@ -1,11 +1,13 @@
 import heapq
+import os
 import shelve
+import shutil
 from statistics import mean
 import sys
 import time
 import copy
 from matplotlib import patches, pyplot as plt
-
+import matplotlib
 import numpy as np
 import torch
 import torchvision
@@ -52,14 +54,14 @@ def load_object_region_index_in_memory(dataset_examples, filename):
     return object_region_index
 
 
-def compute_area_for_cam(cam, threshold=0.6, subregion=None):
+def compute_area_for_cam(cam, lv, uv, subregion=None):
     if subregion is not None:
         x, y, w, h = subregion
         # NOTE: Important: (x, y) -> (j, i) in numpy arrays
         grid = cam[y : y + h, x : x + w]
     else:
         grid = cam
-    grid = grid > threshold
+    grid = (grid > lv) & (grid <= uv)
     area = np.count_nonzero(grid)
     return area
 
@@ -67,14 +69,14 @@ def compute_area_for_cam(cam, threshold=0.6, subregion=None):
 def imagenet_random_access_images(dp, image_idx_list, batch_size=16):
     """returns a dict, key: image_idx, value: image"""
     res = dict()
-    subset = dp["input"][image_idx_list]
-    dataloader = subset.batch(batch_size=batch_size, num_workers=8, shuffle=False)
+    image_idx_arr = [int(idx) for idx in image_idx_list]
+    subset = torch.utils.data.Subset(dp, image_idx_arr)
+    dataloader = torch.utils.data.DataLoader(subset, batch_size=batch_size, shuffle=False, num_workers=8)
     indices_idx = -1
-    for batch_data in dataloader:
-        x = batch_data.data
-        for i in range(x.shape[0]):
+    for images, labels, paths in dataloader:
+        for i in range(images.shape[0]):
             indices_idx += 1
-            res[image_idx_list[indices_idx]] = x[i]
+            res[image_idx_list[indices_idx]] = images[i]
     return res
 
 
@@ -112,181 +114,20 @@ def wilds_random_access_images(
 def from_input_to_image(image):
     if isinstance(image, torch.Tensor):
         image = torchvision.utils.make_grid(image.cpu().data, normalize=True).numpy()
-    image = np.transpose(image, (1, 2, 0))
+    # image = np.transpose(image, (1, 2, 0))
     return image
 
 
 def from_input_to_image_no_axis(image):
     if isinstance(image, torch.Tensor):
         image = torchvision.utils.make_grid(image.cpu().data, normalize=True).numpy()
-    image = np.transpose(image, (1, 2, 0))
+    # image = np.transpose(image, (1, 2, 0))
     return image
 
 
 def argsort(seq):
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
     return sorted(range(len(seq)), key=seq.__getitem__)
-
-
-def get_area_map(
-    cam_map,
-    object_detection_map,
-    cam_size_y,
-    cam_size_x,
-    examples,
-    threshold,
-    region,
-    compression,
-):
-    area_map = dict()
-    if isinstance(region, tuple):
-        x, y, w, h = region
-
-    count = 0
-    for image_idx in examples:
-        if not isinstance(region, tuple):
-            (x, y, w, h) = get_object_region(
-                object_detection_map, cam_size_y, cam_size_x, image_idx
-            )
-        cam = cam_map[image_idx]
-        if compression is not None:
-            if (
-                compression == "jpeg"
-                or compression == "JPEG"
-                or compression == "png"
-                or compression == "PNG"
-            ):
-                cam = np.frombuffer(cam, dtype=np.uint8)
-                cam = cv2.imdecode(cam, cv2.IMREAD_COLOR)
-                cam = cam[:, :, 0]
-            else:
-                raise ValueError("Unknown compression method")
-            cam = cam.reshape((cam_size_y, cam_size_x))
-            cam = np.float32(cam) / 255.0
-
-        area = compute_area_for_cam(cam, threshold, (x, y, w + 1, h + 1))
-        area_map[image_idx] = area
-        count += 1
-
-    return area_map
-
-
-def naive_get_max_metric(
-    dataset,
-    dp,
-    cam_map,
-    object_detection_map,
-    label_map,
-    pred_map,
-    cam_size_y,
-    cam_size_x,
-    examples,
-    threshold,
-    region,
-    k,
-    region_area_threshold,
-    ignore_zero_area_region,
-    compression=None,
-    reverse=False,
-    visualize=False,
-):
-    start = time.time()
-    metric_map = get_area_map(
-        cam_map,
-        object_detection_map,
-        cam_size_y,
-        cam_size_x,
-        examples,
-        threshold,
-        region,
-        compression,
-    )
-    tot = len(examples)
-    metric_list = []
-    for i in range(tot):
-        image_id = examples[i]
-        if isinstance(region, tuple):
-            x, y, w, h = region
-        else:
-            (x, y, w, h) = get_object_region(
-                object_detection_map, cam_size_y, cam_size_x, image_id
-            )
-
-        box_area = w * h
-        if (ignore_zero_area_region and box_area <= 0) or (
-            region_area_threshold is not None and box_area < region_area_threshold
-        ):
-            if reverse:
-                metric = int(1e15)
-            else:
-                metric = -1
-        else:
-            metric = metric_map[image_id] / box_area
-
-        metric_list.append(metric)
-    order = argsort(metric_list)
-
-    if not reverse:
-        order = order[::-1]
-
-    end = time.time()
-
-    tot = min(tot, k)
-
-    if not visualize:
-        return sorted(
-            [(metric_list[i], examples[i]) for i in order[:tot]], reverse=not reverse
-        )
-
-    if dataset == "imagenet":
-        image_map = imagenet_random_access_images(
-            dp, [examples[order[j]] for j in range(tot)]
-        )
-    else:
-        image_map = wilds_random_access_images(
-            dp[0], dp[1], [examples[order[j]] for j in range(tot)]
-        )
-
-    cnt = 0
-    plt.figure(figsize=(8, 10))
-    for j in range(tot):
-        i = order[j]
-        metric = metric_list[i]
-        assert metric >= 0 and metric < 1e15
-        cnt += 1
-        image_id = examples[i]
-        image = image_map[image_id].reshape(3, 224, 224)
-        cam = cam_map[image_id]
-        if isinstance(region, tuple):
-            x, y, w, h = region
-        else:
-            (x, y, w, h) = get_object_region(
-                object_detection_map, cam_size_y, cam_size_x, image_id
-            )
-
-        ax = plt.subplot((tot + 4) // 5, 5, cnt)
-        plt.xticks([], [])
-        plt.yticks([], [])
-        # ax.set_xlabel('x')
-        # ax.set_ylabel('y')
-
-        image = from_input_to_image(image)
-        cam_image = show_cam_on_image(image, cam, use_rgb=True)
-        plt.imshow(cam_image)
-        plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
-        rect = patches.Rectangle(
-            (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
-        )
-        ax.add_patch(rect)
-
-    plt.tight_layout()
-    plt.show()
-    plt.clf()
-
-    return sorted(
-        [(metric_list[order[j]], examples[order[j]]) for j in range(tot)],
-        reverse=not reverse,
-    )
 
 
 def get_approximate_region_using_available_coords(
@@ -383,8 +224,10 @@ def update_max_area_images_in_sub_region_in_memory_version(
     bin_width,
     cam_size_y,
     cam_size_x,
+    hist_size,
     examples,
-    threshold,
+    lv,
+    uv,
     region,
     k,
     region_area_threshold,
@@ -397,7 +240,7 @@ def update_max_area_images_in_sub_region_in_memory_version(
     early_stoppable,
 ):
     """returns a list of (metric, area, image_idx)"""
-
+    # heap is area_images
     if region != "object":
         x, y, w, h = region
         # NOTE: since grayscale cams are 1-indexed, we add 1 to both x and y
@@ -412,7 +255,10 @@ def update_max_area_images_in_sub_region_in_memory_version(
             cam_size_y, cam_size_x, reverse, available_coords, x, y, w, h
         )
 
-    grayscale_threshold = int(threshold * 255)
+    # grayscale_threshold was only for lv
+    grayscale_lv = int(lv * 255)
+    grayscale_uv = int(uv * 255)
+
     tot = len(image_access_order)
     if reverse:
         factor = -1
@@ -440,13 +286,17 @@ def update_max_area_images_in_sub_region_in_memory_version(
         # time_for_loading_region += object_ed - object_st
 
         # st = time.time()
+
+        ### This part I don't understand, but ok it's adding the count
         if ignore_zero_area_region and (w == 0 or h == 0):
             count += 1
             continue
-        box_area = w * h
+        box_area = w * h #area(roi)
         if region_area_threshold is not None and box_area < region_area_threshold:
             count += 1
             continue
+
+
         # ed = time.time()
         # time_for_prefiltering += ed - st
 
@@ -475,20 +325,24 @@ def update_max_area_images_in_sub_region_in_memory_version(
             - hist_prefix_suffix[upper_y, lower_x]
             - hist_prefix_suffix[lower_y, upper_x]
             + hist_prefix_suffix[lower_y, lower_x]
+
         )
 
         # TODO: The current version only uses upper bound. Lower bound should be used to do something as well.
 
         if reverse:
-            approximate_area = hist_suffix_sum[(grayscale_threshold // bin_width) + 1]
+            approximate_area = hist_suffix_sum[(grayscale_lv // bin_width) + 1] - hist_suffix_sum[(grayscale_uv // bin_width)]
         else:
-            approximate_area = hist_suffix_sum[grayscale_threshold // bin_width]
+            if (grayscale_uv // bin_width) + 1 >= hist_size:
+                approximate_area = hist_suffix_sum[grayscale_lv // bin_width]
+            else:
+                approximate_area = hist_suffix_sum[grayscale_lv // bin_width] - hist_suffix_sum[(grayscale_uv // bin_width)+1]
 
         # ed = time.time()
         # time_for_index_lookup += ed - st
 
         # st = time.time()
-        if len(heap) < k or factor * approximate_area / box_area > heap[0][0]:
+        if len(heap) < k or factor * approximate_area / box_area > heap[0][0]: # CP()/area(roi)
             cam = cam_map[image_idx]
             if compression is not None:
                 if (
@@ -507,7 +361,7 @@ def update_max_area_images_in_sub_region_in_memory_version(
                 cam = np.float32(cam) / 255.0
             # x and y have both been incremented by 1, so the region is from (x - 1, y - 1) to (x + w, y + h) exclusive
             area = compute_area_for_cam(
-                cam, threshold=threshold, subregion=(x - 1, y - 1, w + 1, h + 1)
+                cam, lv, uv, subregion=(x - 1, y - 1, w + 1, h + 1)
             )
             if len(heap) < k:
                 heapq.heappush(
@@ -536,16 +390,18 @@ def update_max_area_images_in_sub_region_in_memory_version(
 
 def get_max_area_in_subregion_in_memory_version(
     dataset,
-    dp,
-    label_map,
-    pred_map,
+    image_map,
+    correctness_map,
+    attack_map,
     cam_map,
     object_detection_map,
     bin_width,
     cam_size_y,
     cam_size_x,
+    hist_size,
     examples,
-    threshold,
+    lv,
+    uv,
     region,
     in_memory_index_suffix,
     image_access_order,
@@ -558,11 +414,7 @@ def get_max_area_in_subregion_in_memory_version(
     available_coords=None,
     compression=None,
 ):
-    # start = time.time()
-    freq_class = {}
     area_images = []
-    augmented_img = []
-    orig_img = []
     count = update_max_area_images_in_sub_region_in_memory_version(
         dataset,
         area_images,
@@ -571,8 +423,10 @@ def get_max_area_in_subregion_in_memory_version(
         bin_width,
         cam_size_y,
         cam_size_x,
+        hist_size,
         examples,
-        threshold,
+        lv,
+        uv,
         region,
         k,
         region_area_threshold,
@@ -584,7 +438,7 @@ def get_max_area_in_subregion_in_memory_version(
         image_access_order,
         early_stoppable,
     )
-    # print("Images for which heatmaps are not computed:", count, f"({count / len(image_access_order) * 100:.2f}%)")
+
     if reverse:
         factor = -1
     else:
@@ -594,19 +448,12 @@ def get_max_area_in_subregion_in_memory_version(
         for (metric, area, image_idx) in area_images
     ]
     area_images = sorted(area_images, key=lambda x: x[0], reverse=not reverse)
-    # end = time.time()
-    # print("Actual query time:", end - start)
+
     ###
-    for j in range(len(area_images)):
-        metric, area, image_id = area_images[j]
-        freq_class[image_id] = freq_class.get(image_id, 0) + 1
-
-    freq_class = sorted(freq_class.items(), key = lambda x:x[1])
-    print(freq_class)
-
     if not visualize:
-        return count, area_images, freq_class
+        return count, area_images
     ###
+
     cnt = 0
     plt.figure(figsize=(8, 10))
     tot = len(area_images)
@@ -614,20 +461,21 @@ def get_max_area_in_subregion_in_memory_version(
     if isinstance(region, tuple):
         x, y, w, h = region
 
-    if dataset == "imagenet":
-        image_map = imagenet_random_access_images(
-            dp, [image_idx for (metric, area, image_idx) in area_images]
-        )
-    else:
-        image_map = wilds_random_access_images(
-            dp[0], dp[1], [image_idx for (metric, area, image_idx) in area_images]
-        )
+    # if dataset == "imagenet":
+    #     image_map = imagenet_random_access_images(
+    #         dp, [image_idx for (metric, area, image_idx) in area_images]
+    #     )
+    # else:
+    #     image_map = wilds_random_access_images(
+    #         dp[0], dp[1], [image_idx for (metric, area, image_idx) in area_images]
+    #     )
 
+    filepath = '/homes/gws/hjyu/MaskSearchDemo/Scenario2Adversarial/masksearch_results'
+    shutil.rmtree(filepath)
+    os.mkdir(filepath)
     for j in range(tot):
         cnt += 1
         metric, area, image_id = area_images[j]
-        
-        
         if not isinstance(region, tuple):
             x, y, w, h = get_object_region(
                 object_detection_map, cam_size_y, cam_size_x, image_id
@@ -637,254 +485,245 @@ def get_max_area_in_subregion_in_memory_version(
             continue
 
         if dataset == "imagenet":
-            image = image_map[image_id].reshape(3, 224, 224)
+            image = image_map[image_id]
         else:
             image = image_map[image_id].reshape(3, 448, 448)
         cam = cam_map[image_id]
 
-        ax = plt.subplot((tot + 4) // 5, 5, cnt)
-        plt.xticks([], [])
-        plt.yticks([], [])
-        # ax.set_xlabel('x')
-        # ax.set_ylabel('y')
+        correctness, attack = "cr" if correctness_map[image_id] else "icr", "atk" if attack_map[image_id] else "unatk"
+        save_path = filepath + '/masksearch_cam_display_{}_{}_{}.png'.format(j + 1, correctness, attack)
 
-        image = from_input_to_image(image)
+        image = from_input_to_image_no_axis(image)
+        cam_image = show_cam_on_image(image, cam)
+        # plt.imshow(cam_image)
+        # plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
+        # rect = patches.Rectangle(
+        #     (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
+        # )
+        # fig, ax = plt.subplots(figsize=(8, 8))
+        # plt.ioff()
+        # fig = plt.figure(figsize=(8, 8))
+        # ax = plt.gca()
+        # ax.imshow(cam_image)
+        # ax.add_patch(rect)
+        # plt.axis('off')
+        # Save the image with the rectangle
+        # plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
+        # plt.imsave(save_path, cam_image)
+        cv2.imwrite(save_path, cam_image)
 
-        image_keep = copy.deepcopy(image)
-        orig_img.append(image_keep)
-
-        rndImg = np.reshape(image, (image.shape[0] * image.shape[1], image.shape[2]))
-        np.random.shuffle(rndImg)
-        rndImg = np.reshape(rndImg, image.shape)
-
-        for i in range(y, y+h+1):
-            for j in range(x, x+w+1):
-                rndImg[i][j] = image_keep[i][j]
-
-       # print(rndImg)
-        # plt.imshow(rndImg)
-        augmented_img.append(rndImg)
-        
-        cam_image = show_cam_on_image(image, cam, use_rgb=True)
-
-        plt.imshow(cam_image)
-        plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
-        rect = patches.Rectangle(
-            (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
-        )
-        ax.add_patch(rect)
+    # plt.tight_layout()
+    # plt.show()
+    return count, area_images
 
 
-    plt.tight_layout()
-    plt.show()
-
-    return count, area_images, augmented_img, orig_img
+# # MaskSearch methods for filter queries
 
 
-# MaskSearch methods for filter queries
+# # CT_PX(mask, region, pixel value > threshold) > v
+# def get_images_satisfying_filter(
+#     dataset,
+#     cam_map,
+#     object_detection_map,
+#     in_memory_index_suffix,
+#     bin_width,
+#     hist_size,
+#     cam_size_y,
+#     cam_size_x,
+#     examples,
+#     lv,
+#     uv,
+#     region,
+#     v,
+#     region_area_threshold,
+#     ignore_zero_area_region,
+#     available_coords,
+#     compression,
+# ):
+#     """returns a list of (metric, area, image_idx)"""
+#     threshold = lv
+#     if region != "object":
+#         x, y, w, h = region
+#         # NOTE: since grayscale cams are 1-indexed, we add 1 to both x and y
+#         x += 1
+#         y += 1
+#         (
+#             lower_ys,
+#             upper_ys,
+#             lower_xs,
+#             upper_xs,
+#         ) = get_smallest_region_covering_roi_using_available_coords(
+#             cam_size_y, cam_size_x, available_coords, x, y, w, h
+#         )
 
+#         (
+#             lower_yl,
+#             upper_yl,
+#             lower_xl,
+#             upper_xl,
+#         ) = get_largest_region_covered_by_roi_using_available_coords(
+#             cam_size_y, cam_size_x, available_coords, x, y, w, h
+#         )
 
-# CT_PX(mask, region, pixel value > threshold) > v
-def get_images_satisfying_filter(
-    dataset,
-    cam_map,
-    object_detection_map,
-    bin_width,
-    hist_size,
-    cam_size_y,
-    cam_size_x,
-    examples,
-    threshold,
-    region,
-    v,
-    region_area_threshold,
-    ignore_zero_area_region,
-    in_memory_index_suffix,
-    available_coords,
-    compression,
-):
-    """returns a list of (metric, area, image_idx)"""
+#     grayscale_threshold = int(threshold * 255)
+#     tot = len(examples)
 
-    if region != "object":
-        x, y, w, h = region
-        # NOTE: since grayscale cams are 1-indexed, we add 1 to both x and y
-        x += 1
-        y += 1
-        (
-            lower_ys,
-            upper_ys,
-            lower_xs,
-            upper_xs,
-        ) = get_smallest_region_covering_roi_using_available_coords(
-            cam_size_y, cam_size_x, available_coords, x, y, w, h
-        )
+#     # [filtered by region_area_threshold, filtered_by_upper_bound, filtered_by_lower_bound]
+#     count = np.array([0, 0, 0], dtype=np.int32)
+#     res = []
 
-        (
-            lower_yl,
-            upper_yl,
-            lower_xl,
-            upper_xl,
-        ) = get_largest_region_covered_by_roi_using_available_coords(
-            cam_size_y, cam_size_x, available_coords, x, y, w, h
-        )
+#     # time_for_maintaining_topk = 0
+#     # time_for_index_lookup = 0
+#     # time_for_prefiltering = 0
+#     # time_for_loading_region = 0
 
-    grayscale_threshold = int(threshold * 255)
-    tot = len(examples)
+#     overapprox_bin = grayscale_threshold // bin_width
+#     underapprox_bin = (grayscale_threshold // bin_width) + 1
+#     if underapprox_bin == hist_size:
+#         trivial_underapprox = True
+#         theta_underline = 0
+#     else:
+#         trivial_underapprox = False
 
-    # [filtered by region_area_threshold, filtered_by_upper_bound, filtered_by_lower_bound]
-    count = np.array([0, 0, 0], dtype=np.int32)
-    res = []
+#     for offset in range(tot):
+#         i = offset
+#         # object_st = time.time()
+#         image_idx = examples[i]
+#         if region == "object":
+#             x, y, w, h = get_object_region(
+#                 object_detection_map, cam_size_y, cam_size_x, image_idx
+#             )
+#             x += 1
+#             y += 1
+#         # object_ed = time.time()
+#         # time_for_loading_region += object_ed - object_st
 
-    # time_for_maintaining_topk = 0
-    # time_for_index_lookup = 0
-    # time_for_prefiltering = 0
-    # time_for_loading_region = 0
+#         # st = time.time()
+#         if ignore_zero_area_region and (w == 0 or h == 0):
+#             count[1] += 1
+#             continue
+#         box_area = w * h
+#         if region_area_threshold is not None and box_area < region_area_threshold:
+#             count[0] += 1
+#             continue
+#         # ed = time.time()
+#         # time_for_prefiltering += ed - st
 
-    overapprox_bin = grayscale_threshold // bin_width
-    underapprox_bin = (grayscale_threshold // bin_width) + 1
-    if underapprox_bin == hist_size:
-        trivial_underapprox = True
-        theta_underline = 0
-    else:
-        trivial_underapprox = False
+#         # Construct hist_suffix_sum for region (x, y, x + w, y + h)
+#         # st = time.time()
+#         if region == "object":
+#             (
+#                 lower_ys,
+#                 upper_ys,
+#                 lower_xs,
+#                 upper_xs,
+#             ) = get_smallest_region_covering_roi_using_available_coords(
+#                 cam_size_y, cam_size_x, available_coords, x, y, w, h
+#             )
+#             (
+#                 lower_yl,
+#                 upper_yl,
+#                 lower_xl,
+#                 upper_xl,
+#             ) = get_largest_region_covered_by_roi_using_available_coords(
+#                 cam_size_y, cam_size_x, available_coords, x, y, w, h
+#             )
 
-    for offset in range(tot):
-        i = offset
-        # object_st = time.time()
-        image_idx = examples[i]
-        if region == "object":
-            x, y, w, h = get_object_region(
-                object_detection_map, cam_size_y, cam_size_x, image_idx
-            )
-            x += 1
-            y += 1
-        # object_ed = time.time()
-        # time_for_loading_region += object_ed - object_st
+#         if dataset == "imagenet":
+#             generic_image_id = int(image_idx)
+#         else:
+#             generic_image_id = get_generic_image_id_for_wilds(
+#                 image_idx.split("_")[0], image_idx.split("_")[-1]
+#             )
+#         hist_prefix_suffix = in_memory_index_suffix[generic_image_id][:]
+#         box_area = w * h
+#         v=v*box_area
 
-        # st = time.time()
-        if ignore_zero_area_region and (w == 0 or h == 0):
-            count[1] += 1
-            continue
-        box_area = w * h
-        if region_area_threshold is not None and box_area < region_area_threshold:
-            count[0] += 1
-            continue
-        # ed = time.time()
-        # time_for_prefiltering += ed - st
+#         # NOTE: Important: (x, y) -> (j, i) in numpy arrays
+#         hist_suffix_sum_smallest_covering_roi = (
+#             hist_prefix_suffix[upper_ys, upper_xs]
+#             - hist_prefix_suffix[upper_ys, lower_xs]
+#             - hist_prefix_suffix[lower_ys, upper_xs]
+#             + hist_prefix_suffix[lower_ys, lower_xs]
+#         )
+#         hist_suffix_sum_largest_covered_by_roi = (
+#             hist_prefix_suffix[upper_yl, upper_xl]
+#             - hist_prefix_suffix[upper_yl, lower_xl]
+#             - hist_prefix_suffix[lower_yl, upper_xl]
+#             + hist_prefix_suffix[lower_yl, lower_xl]
+#         )
 
-        # Construct hist_suffix_sum for region (x, y, x + w, y + h)
-        # st = time.time()
-        if region == "object":
-            (
-                lower_ys,
-                upper_ys,
-                lower_xs,
-                upper_xs,
-            ) = get_smallest_region_covering_roi_using_available_coords(
-                cam_size_y, cam_size_x, available_coords, x, y, w, h
-            )
-            (
-                lower_yl,
-                upper_yl,
-                lower_xl,
-                upper_xl,
-            ) = get_largest_region_covered_by_roi_using_available_coords(
-                cam_size_y, cam_size_x, available_coords, x, y, w, h
-            )
+#         theta_bar_1 = hist_suffix_sum_smallest_covering_roi[overapprox_bin]
+#         theta_bar_2 = (
+#             hist_suffix_sum_largest_covered_by_roi[overapprox_bin]
+#             + box_area
+#             - (upper_yl - lower_yl)
+#             * (upper_xl - lower_xl)
+#             * available_coords
+#             * available_coords
+#         )
+#         theta_bar = min(theta_bar_1, theta_bar_2)
 
-        if dataset == "imagenet":
-            generic_image_id = int(image_idx)
-        else:
-            generic_image_id = get_generic_image_id_for_wilds(
-                image_idx.split("_")[0], image_idx.split("_")[-1]
-            )
-        hist_prefix_suffix = in_memory_index_suffix[generic_image_id][:]
+#         # ed = time.time()
+#         # time_for_index_lookup += ed - st
 
-        # NOTE: Important: (x, y) -> (j, i) in numpy arrays
-        hist_suffix_sum_smallest_covering_roi = (
-            hist_prefix_suffix[upper_ys, upper_xs]
-            - hist_prefix_suffix[upper_ys, lower_xs]
-            - hist_prefix_suffix[lower_ys, upper_xs]
-            + hist_prefix_suffix[lower_ys, lower_xs]
-        )
-        hist_suffix_sum_largest_covered_by_roi = (
-            hist_prefix_suffix[upper_yl, upper_xl]
-            - hist_prefix_suffix[upper_yl, lower_xl]
-            - hist_prefix_suffix[lower_yl, upper_xl]
-            + hist_prefix_suffix[lower_yl, lower_xl]
-        )
+#         # st = time.time()
 
-        theta_bar_1 = hist_suffix_sum_smallest_covering_roi[overapprox_bin]
-        theta_bar_2 = (
-            hist_suffix_sum_largest_covered_by_roi[overapprox_bin]
-            + box_area
-            - (upper_yl - lower_yl)
-            * (upper_xl - lower_xl)
-            * available_coords
-            * available_coords
-        )
-        theta_bar = min(theta_bar_1, theta_bar_2)
+#         if theta_bar <= v:
+#             count[1] += 1
+#         else:
+#             # Compute theta_underline
+#             if not trivial_underapprox:
+#                 theta_underline_1 = (
+#                     hist_suffix_sum_smallest_covering_roi[underapprox_bin]
+#                     - (upper_ys - lower_ys)
+#                     * (upper_xs - lower_xs)
+#                     * available_coords
+#                     * available_coords
+#                     + box_area
+#                 )
+#                 theta_underline_2 = hist_suffix_sum_largest_covered_by_roi[
+#                     underapprox_bin
+#                 ]
+#                 theta_underline = max(theta_underline_1, theta_underline_2)
 
-        # ed = time.time()
-        # time_for_index_lookup += ed - st
+#             if theta_underline > v:
+#                 res.append((theta_underline, image_idx))
+#                 count[2] += 1
+#             else:
+#                 # Only now does MaskSearch compute the actual theta
+#                 cam = cam_map[image_idx]
+#                 if compression is not None:
+#                     if (
+#                         compression == "jpeg"
+#                         or compression == "JPEG"
+#                         or compression == "png"
+#                         or compression == "PNG"
+#                     ):
+#                         cam = np.frombuffer(cam, dtype=np.uint8)
+#                         cam = cv2.imdecode(cam, cv2.IMREAD_COLOR)
+#                         cam = cam[:, :, 0]
+#                     else:
+#                         raise ValueError("Unknown compression method")
+#                     cam = cam.reshape((cam_size_y, cam_size_x))
+#                     # Since compressed CAMs are in the range [0, 255]
+#                     cam = np.float32(cam) / 255.0
+#                 # x and y have both been incremented by 1, so the region is from (x - 1, y - 1) to (x + w, y + h) exclusive
+#                 area = compute_area_for_cam(
+#                     cam, threshold=threshold, subregion=(x - 1, y - 1, w + 1, h + 1)
+#                 )
+#                 if area > v:
+#                     res.append((area, image_idx))
 
-        # st = time.time()
+#         # ed = time.time()
+#         # time_for_maintaining_topk += ed - st
 
-        if theta_bar <= v:
-            count[1] += 1
-        else:
-            # Compute theta_underline
-            if not trivial_underapprox:
-                theta_underline_1 = (
-                    hist_suffix_sum_smallest_covering_roi[underapprox_bin]
-                    - (upper_ys - lower_ys)
-                    * (upper_xs - lower_xs)
-                    * available_coords
-                    * available_coords
-                    + box_area
-                )
-                theta_underline_2 = hist_suffix_sum_largest_covered_by_roi[
-                    underapprox_bin
-                ]
-                theta_underline = max(theta_underline_1, theta_underline_2)
-
-            if theta_underline > v:
-                res.append((theta_underline, image_idx))
-                count[2] += 1
-            else:
-                # Only now does MaskSearch compute the actual theta
-                cam = cam_map[image_idx]
-                if compression is not None:
-                    if (
-                        compression == "jpeg"
-                        or compression == "JPEG"
-                        or compression == "png"
-                        or compression == "PNG"
-                    ):
-                        cam = np.frombuffer(cam, dtype=np.uint8)
-                        cam = cv2.imdecode(cam, cv2.IMREAD_COLOR)
-                        cam = cam[:, :, 0]
-                    else:
-                        raise ValueError("Unknown compression method")
-                    cam = cam.reshape((cam_size_y, cam_size_x))
-                    # Since compressed CAMs are in the range [0, 255]
-                    cam = np.float32(cam) / 255.0
-                # x and y have both been incremented by 1, so the region is from (x - 1, y - 1) to (x + w, y + h) exclusive
-                area = compute_area_for_cam(
-                    cam, threshold=threshold, subregion=(x - 1, y - 1, w + 1, h + 1)
-                )
-                if area > v:
-                    res.append((area, image_idx))
-
-        # ed = time.time()
-        # time_for_maintaining_topk += ed - st
-
-    # print("Images for which heatmaps are not computed:", count, f"({count / tot * 100:.2f}%)")
-    # print("Time for prefiltering:", time_for_prefiltering)
-    # print("Time for loading region:", time_for_loading_region)
-    # print("Time for index lookup:", time_for_index_lookup)
-    # print("Time for maintaining top-k:", time_for_maintaining_topk)
-    return count, res
+#     # print("Images for which heatmaps are not computed:", count, f"({count / tot * 100:.2f}%)")
+#     # print("Time for prefiltering:", time_for_prefiltering)
+#     # print("Time for loading region:", time_for_loading_region)
+#     # print("Time for index lookup:", time_for_index_lookup)
+#     # print("Time for maintaining top-k:", time_for_maintaining_topk)
+#     return count, res
 
 
 # # Multi-processing version

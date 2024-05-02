@@ -1,10 +1,11 @@
 *.pyc
-*.pth
-*.JPEG
-*.csv
-*.tgz
-*.pkl
 *.bak
 *.dat
 *.dir
+*.pkl
+*.png
+*.JPEG
+*.csv
+*.tgz
 *.npy
+*.pth

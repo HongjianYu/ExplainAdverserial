@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import time
 
 # %%
-main = Path(".").resolve()
+main = Path("/homes/gws/hjyu/MaskSearchDemo/Scenario2Adversarial").resolve()
 main
 
 # %%
@@ -33,13 +33,10 @@ dataset = ImagenettePath(main/"data", size='full',
                          split='val', transform=transform, download=False)
 
 # %%
-cam_map = shelve.open("./serialized/cam_map")
-with open("./serialized/image_data.pkl", "rb") as f:
-    image_map = pickle.load(f)
-with open("./serialized/correctness_data.pkl", "rb") as f:
-    correctness_map = pickle.load(f)
-with open("./serialized/attack_data.pkl", "rb") as f:
-    attack_map = pickle.load(f)
+cam_map = shelve.open(str(main) + "/serialized/cam_map")
+image_map = shelve.open(str(main) + "/serialized/image_map")
+correctness_map = shelve.open(str(main) + "/serialized/correctness_map")
+attack_map = shelve.open(str(main) + "/serialized/attack_map")
 
 # %%
 image_total = len(dataset)
@@ -59,14 +56,50 @@ cam_size_x = 600
 available_coords = 20
 
 in_memory_index_suffix = np.load(
-    f"./npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy"
+    main/f"npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy"
 )
 
 # %%
 region_area_threshold = 5000
-region = "object"
-threshold = 0.8
-lv = 0.8
-uv = 1.0
-reverse = True
-k = 25
+region = (0, 0, 600, 400)
+lv = 0.2
+uv = 0.4
+reverse = False
+k = 20
+
+image_access_order = range(len(dataset_examples))
+
+start = time.time()
+count, images = get_max_area_in_subregion_in_memory_version(
+    "imagenet",
+    image_map,
+    correctness_map,
+    attack_map,
+    cam_map,
+    None,
+    bin_width,
+    cam_size_y,
+    cam_size_x,
+    hist_size,
+    dataset_examples,
+    lv,
+    uv,
+    region,
+    in_memory_index_suffix,
+    image_access_order,
+    early_stoppable=False,
+    k=k,
+    region_area_threshold=region_area_threshold,
+    ignore_zero_area_region=True,
+    reverse=reverse,
+    visualize=False,
+    available_coords=available_coords,
+    compression=None,
+)
+
+print(images)
+end = time.time()
+print("Skipped images:", count)
+print("(MaskSearch vanilla) Query time (cold cache):", end - start)
+
+# %%
