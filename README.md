@@ -20,8 +20,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 pip install Flask
 pip install flask-cors
 cd ./GUI/frontend
-npm install react-modal
-npm install react-router-dom
+npm install
 ```
 
 ### Run the project
