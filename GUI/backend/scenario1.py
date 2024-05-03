@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS, cross_origin
 import sys
-sys.path.append("/Users/lindseywei/MaskSearch/wilds")
+# sys.path.append("/Users/lindseywei/MaskSearch/wilds")
+sys.path.append("/homes/gws/hjyu/MaskSearchDemo/Scenario1Wilds")
 from topk import *
 from s1_data_process import data_process
 app = Flask(__name__)
@@ -21,14 +22,14 @@ def topk_search():
     uv = float(pixel_upper_bound)
     order = data.get('order')
     reverse = False if order == 'DESC' else True
-    
+
     query_command = f"""
     SELECT mask_id
     FROM MasksDatabaseView
     ORDER BY CP(mask, roi, ({pixel_lower_bound}, {pixel_upper_bound})) / area(roi) {order}
     LIMIT {k};
     """
-    start = time.time()
+    # start = time.time()
     # Dummy implementation to return the query command and some mock image IDs
     hist_size = 16
     bin_width = 256 // hist_size
@@ -36,9 +37,9 @@ def topk_search():
     cam_size_x = 448
     region_area_threshold = 5000
     available_coords = 64
-    
-    ps = time.time()
-    print("data process: ", ps - start)
+
+    # ps = time.time()
+    # print("data process: ", ps - start)
     count, images = get_max_area_in_subregion_in_memory_version(
     "wilds",
     (id_val_data, ood_val_data),
@@ -65,10 +66,10 @@ def topk_search():
     available_coords=available_coords,
     compression=None,
     )
-    
+
     image_ids = [image_idx for (metric, area, image_idx) in images]
-    end = time.time()
-    print("time: ", end - start)
+    # end = time.time()
+    # print("time: ", end - start)
     return jsonify({'query_command': query_command, 'image_ids': image_ids})
 
 
@@ -95,7 +96,7 @@ def filter_search():
     reverse = True if comparison == '<' else False
     lv = float(pixel_lower_bound)
     uv = float(pixel_upper_bound)
-    
+
     query_command = f"""
     SELECT mask_id
     FROM MasksDatabaseView
@@ -127,9 +128,9 @@ def filter_search():
     None,
     reverse=reverse)
     num = 0
-    if(len(images)>50): 
+    if(len(images)>50):
         num = 50
-    else: 
+    else:
         num = len(images)
     print("*", len(images), num)
     image_ids = [image_idx for (metric,image_idx) in images[:num]]

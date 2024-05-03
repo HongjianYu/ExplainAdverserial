@@ -1,6 +1,14 @@
 *.pyc
 *.pth
 *.JPEG
+*.jpg
+*.png
 *.csv
 *.tgz
+*.bak
+*.dat
+*.dir
 *.pkl
+*.json
+*.tar.gz
+*.npy

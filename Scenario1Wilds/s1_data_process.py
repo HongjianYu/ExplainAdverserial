@@ -1,8 +1,9 @@
 import sys
 
 sys.argv = [""]
-sys.path.append("/Users/lindseywei/masksearch")
-                
+# sys.path.append("/Users/lindseywei/masksearch")
+sys.path.append("/homes/gws/hjyu/MaskSearchDemo/Scenario1Wilds")
+
 from topk import *
 import argparse
 import json
@@ -11,16 +12,16 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision
 import torchvision.transforms as transforms
-from utils import *
-from pytorch_grad_cam import (
-    AblationCAM,
-    EigenGradCAM,
-    GradCAM,
-    GradCAMPlusPlus,
-    HiResCAM,
-    LayerCAM,
-    RandomCAM,
-)
+# from utils import *
+# from pytorch_grad_cam import (
+#     AblationCAM,
+#     EigenGradCAM,
+#     GradCAM,
+#     GradCAMPlusPlus,
+#     HiResCAM,
+#     LayerCAM,
+#     RandomCAM,
+# )
 from pytorch_grad_cam.utils.image import show_cam_on_image
 import wilds
 from wilds import get_dataset
@@ -30,12 +31,13 @@ import time
 
 def data_process():
 
-    dir="/Users/lindseywei/masksearch/wilds/"
+    # dir="/Users/lindseywei/masksearch/wilds/"
+    dir = "/homes/gws/hjyu/MaskSearchDemo/Scenario1Wilds/"
     # Load the full dataset, and download it if necessary
     dataset = get_dataset(
         dataset="iwildcam",
-        download=True,
-        root_dir="/Users/lindseywei/masksearch/wilds/"
+        download=False,
+        root_dir=dir
     )
 
     # Get the ID validation set
@@ -53,7 +55,7 @@ def data_process():
         ),
     )
 
-    
+
 
     # Load from disk
     cam_map = shelve.open(dir + "id_ood_val_cam_map.shelve")
@@ -62,7 +64,7 @@ def data_process():
     with open(dir + "id_ood_val_label.pkl", "rb") as f:
         label_map = pickle.load(f)
 
-    
+
 
     id_total = 7314
     ood_total = 14961
@@ -70,7 +72,7 @@ def data_process():
     for distribution, image_total in zip(["id_val", "ood_val"], [id_total, ood_total]):
         for image_idx in range(1, 1 + image_total):
             dataset_examples.append(f"{distribution}_{image_idx}")
-        
+
     hist_size = 16
     hist_edges = []
     bin_width = 256 // hist_size
@@ -82,7 +84,7 @@ def data_process():
 
     object_detection_map = load_object_region_index_in_memory(
         dataset_examples,
-        dir + "id_ood_val_object_detection_map.shelve",
+        f"{dir}id_ood_val_object_detection_map.shelve",
     )
 
     in_memory_index_suffix = np.load(
