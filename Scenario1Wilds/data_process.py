@@ -4,7 +4,7 @@ sys.argv = [""]
 # sys.path.append("/Users/lindseywei/masksearch")
 sys.path.append("/homes/gws/hjyu/MaskSearchDemo/Scenario1Wilds")
 
-from topk import *
+from Scenario1Wilds.masksearch import *
 import argparse
 import json
 import pickle
