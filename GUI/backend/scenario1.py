@@ -3,8 +3,8 @@ from flask_cors import CORS, cross_origin
 import sys
 # sys.path.append("/Users/lindseywei/MaskSearch/wilds")
 sys.path.append("/homes/gws/hjyu/MaskSearchDemo/Scenario1Wilds")
-from topk import *
-from s1_data_process import data_process
+from masksearch import *
+from data_process import data_process
 app = Flask(__name__)
 CORS(app)
 
@@ -139,15 +139,15 @@ def filter_search():
 
 @app.route('/topk_results/<filename>')
 def topk_image(filename):
-    return send_from_directory('topk_results', filename)
+    return send_from_directory('scenario1_samples/topk_results', filename)
 
 @app.route('/filter_results/<filename>')
 def filter_image(filename):
-    return send_from_directory('filter_results', filename)
+    return send_from_directory('scenario1_samples/filter_results', filename)
 
 @app.route('/augment_results/<filename>')
 def augment_image(filename):
-    return send_from_directory('augment_results', filename)
+    return send_from_directory('scenario1_samples/augment_results', filename)
 
 if __name__ == '__main__':
     #app.run(debug=True)
