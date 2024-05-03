@@ -73,85 +73,8 @@ def topk_search():
     end = time.time()
     print("time: ", end - start)
     return jsonify({'query_command': query_command, 'image_ids': image_ids})
-
-
-@app.route('/api/augment', methods=['POST'])
-def augment():
-    data = request.json
-    img_ids = data.get('image_ids')
-    # Now you can use img_ids for augmentation
-    print(img_ids)
-    return jsonify({'image_ids': img_ids})
-
-
-
-@app.route('/api/filter_search', methods=['POST'])
-def filter_search():
-    data = request.json
-    threshold = data.get('threshold')
-    v = float(threshold)
-    roi = 'True' if data.get('roi') == 'object bounding box' else 'False'
-    region = 'object' if roi == 'True' else 'custom'
-    pixel_upper_bound = data.get('pixelUpperBound')
-    pixel_lower_bound = data.get('pixelLowerBound')
-    comparison = data.get('thresholdDirection')
-    reverse = True if comparison == '<' else False
-    lv = float(pixel_lower_bound)
-    uv = float(pixel_upper_bound)
-
-    query_command = f"""
-    SELECT mask_id
-    FROM MasksDatabaseView
-    WHERE CP(mask, roi, ({pixel_lower_bound}, {pixel_upper_bound})) / area(roi) {comparison} {threshold};
-    """
-
-    hist_size = 16
-    bin_width = 256 // hist_size
-    cam_size_y = 448
-    cam_size_x = 448
-    region_area_threshold = 5000
-    available_coords = 64
-    count, images = get_images_satisfying_filter("wilds",
-        cam_map,
-        object_detection_map,
-        in_memory_index_suffix,
-        bin_width,
-        hist_size,
-        cam_size_y,
-        cam_size_x,
-        dataset_examples,
-        lv,
-        uv,
-        region,
-        v,
-        region_area_threshold,
-        True,
-        available_coords,
-    None,
-    reverse=reverse)
-    num = 0
-    if(len(images)>50):
-        num = 50
-    else:
-        num = len(images)
-    print("*", len(images), num)
-    image_ids = [image_idx for (metric,image_idx) in images[:num]]
-    # Dummy implementation to return the query command and some mock image IDs
-    return jsonify({'query_command': query_command, 'image_ids': image_ids})
-
-@app.route('/topk_results/<filename>')
-def topk_image(filename):
-    return send_from_directory('topk_results', filename)
-
-@app.route('/filter_results/<filename>')
-def filter_image(filename):
-    return send_from_directory('filter_results', filename)
-
-@app.route('/augment_results/<filename>')
-def augment_image(filename):
-    return send_from_directory('augment_results', filename)
+    
 
 if __name__ == '__main__':
-    #app.run(debug=True)
-    id_val_data, ood_val_data, label_map, pred_map, cam_map, object_detection_map, dataset_examples, in_memory_index_suffix, image_access_order = data_process()
+    # id_val_data, ood_val_data, label_map, pred_map, cam_map, object_detection_map, dataset_examples, in_memory_index_suffix, image_access_order = data_process()
     app.run(port=8000)
