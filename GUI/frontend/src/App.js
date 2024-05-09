@@ -43,7 +43,7 @@ function App() {
     <Router>
       <div className="app">
         <header className="app-header">
-          MaskSearch
+          MaskSearch - Image Searching for Adversarial Attacks
           {/* Link to Data Preparation page */}
           {/* <nav>
             <Link to="/data-preparation">Data Preparation</Link>

@@ -1,28 +1,41 @@
 // src/components/ImageSelection.js
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
 
 function ImageSelection({ isOpen, imageId, onRequestClose, mode }) {
-    let imagePath;
-    if (mode === 'Top-K') {
-        imagePath = 'topk_results';
-    } else if (mode === 'Filter') {
-        imagePath = 'filter_results';
-    } else if (mode === 'Aggregation') {
-        imagePath = 'aggregation_results';
-    }
-    const imageUrl = `http://localhost:8000/${imagePath}/${imageId}.jpg`;
+    const [stat, setStat] = useState('');
+
+    const imageUrl = `http://localhost:8000/topk_results/${imageId}.JPEG`;
+    const statUrl = `http://localhost:8000/topk_labels/${imageId}`
 
     const handleImageLoadError = () => {
         console.error('Failed to load image with ID:', imageId);
     };
 
+    const fetchImageLabels = async (path) => {
+        return (await fetch(path, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })).json();
+    };
+
+    const handleImageLabels = async () => {
+        const labels = await fetchImageLabels(statUrl)
+        const correctness = labels.correctness ? 'Correct' : 'Incorrect'
+        const attack = labels.attack ? 'Yes' : 'No'
+        setStat(`Prediction: ${correctness};  Attack: ${attack}`);
+    };
+
+    handleImageLabels()
+
     return (
-        <Modal 
-            isOpen={isOpen} 
-            onRequestClose={onRequestClose} 
+        <Modal
+            isOpen={isOpen}
+            onRequestClose={onRequestClose}
             style={{
                 overlay: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)' // Optional: dark overlay
@@ -47,8 +60,11 @@ function ImageSelection({ isOpen, imageId, onRequestClose, mode }) {
                     onError={handleImageLoadError}
                     style={{ maxWidth: '100%', maxHeight: '80vh' }} // Resizes image to not be too large
                 />
+                <div style={{ marginTop: '5px' }}>
+                    {stat}
+                </div>
                 <div>
-                    <button onClick={onRequestClose} style={{ marginTop: '20px' }}>Close</button>
+                    <button onClick={onRequestClose} style={{ marginTop: '5px' }}>Close</button>
                 </div>
             </div>
         </Modal>

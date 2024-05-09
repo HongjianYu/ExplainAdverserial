@@ -337,12 +337,12 @@ def update_max_area_images_in_sub_region_in_memory_version(
         # TODO: The current version only uses upper bound. Lower bound should be used to do something as well.
 
         if reverse:
-            approximate_area = hist_suffix_sum[(grayscale_lv // bin_width) + 1] - hist_suffix_sum[(grayscale_uv // bin_width)] 
+            approximate_area = hist_suffix_sum[(grayscale_lv // bin_width) + 1] - hist_suffix_sum[(grayscale_uv // bin_width)]
         else:
             if (grayscale_uv // bin_width) + 1 >= hist_size:
                 approximate_area = hist_suffix_sum[grayscale_lv // bin_width]
             else:
-                approximate_area = hist_suffix_sum[grayscale_lv // bin_width] - hist_suffix_sum[(grayscale_uv // bin_width)+1] 
+                approximate_area = hist_suffix_sum[grayscale_lv // bin_width] - hist_suffix_sum[(grayscale_uv // bin_width)+1]
 
         # ed = time.time()
         # time_for_index_lookup += ed - st
@@ -447,7 +447,7 @@ def get_max_area_in_subregion_in_memory_version(
     )
     # print("Images for which heatmaps are not computed:", count, f"({count / len(image_access_order) * 100:.2f}%)")
     matplotlib.use('agg')
-    
+
     if reverse:
         factor = -1
     else:
@@ -478,11 +478,13 @@ def get_max_area_in_subregion_in_memory_version(
         image_map = wilds_random_access_images(
             dp[0], dp[1], [image_idx for (metric, area, image_idx) in area_images]
         )
-    filepath = '/Users/lindseywei/MaskSearch/MaskSearchDemo/backend/topk_results'
+    filepath = '/homes/gws/hjyu/MaskSearchDemo/GUI/backend/scenario1_samples/topk_results'
+    # filepath = '/Users/lindseywei/MaskSearch/MaskSearchDemo/backend/topk_results'
     shutil.rmtree(filepath)
     os.mkdir(filepath)
     for j in range(tot):
-        save_path = '/Users/lindseywei/MaskSearch/MaskSearchDemo/backend/topk_results/{}.png'.format(j)
+        save_path = '/homes/gws/hjyu/MaskSearchDemo/GUI/backend/scenario1_samples/topk_results/{}.png'.format(j)
+        # save_path = '/Users/lindseywei/MaskSearch/MaskSearchDemo/backend/topk_results/{}.png'.format(j)
         cnt += 1
         metric, area, image_id = area_images[j]
         if not isinstance(region, tuple):
@@ -500,14 +502,14 @@ def get_max_area_in_subregion_in_memory_version(
         cam = cam_map[image_id]
 
         image = from_input_to_image_no_axis(image)
-        cam_image = show_cam_on_image(image, cam, use_rgb=True)
+        cam_image = show_cam_on_image(image, cam)
         #plt.imshow(cam_image)
         #plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
         rect = patches.Rectangle(
             (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
         )
         #fig, ax = plt.subplots(figsize=(8, 8))
-        plt.ioff() 
+        plt.ioff()
         start = time.time()
         fig = plt.figure(figsize=(8, 8))
         ax = plt.gca()

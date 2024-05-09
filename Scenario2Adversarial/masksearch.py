@@ -507,7 +507,7 @@ def get_max_area_in_subregion_in_memory_version(
         # ax.imshow(cam_image)
         # ax.add_patch(rect)
         # plt.axis('off')
-        # Save the image with the rectangle
+        # # Save the image with the rectangle
         # plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
         # plt.imsave(save_path, cam_image)
         cv2.imwrite(save_path, cam_image)

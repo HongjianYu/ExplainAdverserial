@@ -6,6 +6,7 @@ from torchvision import datasets, transforms
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pathlib import Path
 from PIL import Image
+from tqdm.notebook import tqdm
 import argparse
 import json
 import pickle
@@ -37,6 +38,15 @@ cam_map = shelve.open(str(main) + "/serialized/cam_map")
 image_map = shelve.open(str(main) + "/serialized/image_map")
 correctness_map = shelve.open(str(main) + "/serialized/correctness_map")
 attack_map = shelve.open(str(main) + "/serialized/attack_map")
+
+# %%
+# with tqdm(desc=f"Bind cam images", total=len(cam_map)) as pbar:
+#     for i in range(len(cam_map)):
+#         idx = f"{i}"
+#         image, cam = image_map[idx], cam_map[idx]
+#         cam_image = show_cam_on_image(image, cam)
+#         cv2.imwrite(str(main/"cam_images"/f"{i}.JPEG"), cam_image)
+#         pbar.update(1)
 
 # %%
 image_total = len(dataset)
