@@ -8,11 +8,7 @@ function ResultsSection({ imageIds, mode, onSelectImage }) {
     let imagePath;
     // TODO: Add another check for augment or noth
     if (mode === 'Top-K') {
-        imagePath = 'topk_results';
-    } else if (mode === 'Filter') {
-        imagePath = 'filter_results';
-    } else if (mode === 'Aggregation') {
-        imagePath = 'aggregation_results';
+        imagePath = 'topk_cams';
     }
 
     return (

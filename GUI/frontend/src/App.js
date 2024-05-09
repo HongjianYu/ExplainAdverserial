@@ -12,7 +12,7 @@ function App() {
   const [imageIds, setImageIds] = useState([]);
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
-  const [isAugment, setAugment] = useState(false);
+  const [toggle, setEnable] = useState(false);
 
   // Handle the search results from InputSection
   const handleSearchResults = (results) => {
@@ -34,20 +34,16 @@ function App() {
     setSelectedImageId(null);
   };
 
-  // TODO: Keep track of the Augment status
-  const handleStartAugment = (status) => {
-    setAugment(status);
-  }
+  // Toggle the state when the slider is clicked
+  const handleToggle = () => {
+    setEnable(!toggle);
+  };
 
   return (
     <Router>
       <div className="app">
         <header className="app-header">
           MaskSearch - Image Searching for Adversarial Attacks
-          {/* Link to Data Preparation page */}
-          {/* <nav>
-            <Link to="/data-preparation">Data Preparation</Link>
-          </nav> */}
         </header>
         <Routes>
           <Route path="/data-preparation" element={<DataPreparation />} />

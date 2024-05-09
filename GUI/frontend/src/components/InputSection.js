@@ -14,7 +14,7 @@ function InputSection({ onSearchResults, onModeChange }) {
     const [thresholdDirection, setThresholdDirection] = useState('>');
     const [queryCommand, setQueryCommand] = useState('');
     const [isQueryActive, setIsQueryActive] = useState(false);
-    const [isPathActive, setIsPathActive] = useState(false);
+    const [ms, setEnable] = useState(true);
 
 
     const fetchQueryCommand = async (path, body) => {
@@ -32,15 +32,7 @@ function InputSection({ onSearchResults, onModeChange }) {
         let path, body;
         if (mode === 'Top-K') {
             path = '/api/topk_search';
-            body = { k, pixelUpperBound, pixelLowerBound, order };
-        }
-        if (mode === 'Filter') {
-            path = '/api/filter_search';
-            body = { threshold, thresholdDirection, pixelUpperBound, pixelLowerBound };
-        }
-        if (mode === 'Aggregation') {
-            path = '/api/filter_search';
-            body = { threshold, thresholdDirection, pixelUpperBound, pixelLowerBound };
+            body = { k, pixelUpperBound, pixelLowerBound, order, ms };
         }
 
         const data = await fetchQueryCommand(path, body);
@@ -53,16 +45,9 @@ function InputSection({ onSearchResults, onModeChange }) {
         // Implement later, make a window to show path
     };
 
-    const handleStartAugment = async () => {
-        // const response = await fetch('http://localhost:5000/api/augment');
-        // const data = await response.json();
-        // console.log('Augment result:', data.result);
-        setIsPathActive(true);
-        // TODO: Set the status of augment to true, other necessary implementation for augment
-    };
-
-    const handleShowPath = () => {
-        // Implement later, make a window to show path
+    // Handler for toggling the slider
+    const handleToggle = () => {
+        setEnable(!ms); // Toggle the state when the slider is clicked
     };
 
     const handleModeChange = (newMode) => {
@@ -75,7 +60,24 @@ function InputSection({ onSearchResults, onModeChange }) {
     return (
         <div className="input-section">
             <div className="header">
-                <h2 className="title">{mode}</h2>
+                <div className="masksearch-container">
+                    <div className="masksearch-switch">
+                    <input type="checkbox" className="checkbox" name="masksearch" id="masksearch" checked={ms} onChange={handleToggle}/>
+                    <label className="label" htmlFor="masksearch">
+                        <span className="inner" />
+                        {/* <span className="switch" /> */}
+                    </label>
+                    </div>
+                </div>
+
+                {/* <div className="masksearch-container">
+                    <div className="masksearch-switch">
+                        <input type="checkbox" className="checkbox" checked={ms} onChange={handleToggle}/>
+                        <span className="slider"></span>
+                        <span className="slider-label">X</span>
+                    </div>
+                </div> */}
+
                 <div className="mode-switch">
                     <button className={mode === 'Top-K' ? 'active' : ''} onClick={() => handleModeChange('Top-K')}>Top-K</button>
                     {/* <button className={mode === 'Filter' ? 'active' : ''} onClick={() => handleModeChange('Filter')}>Filter</button> */}
@@ -94,22 +96,22 @@ function InputSection({ onSearchResults, onModeChange }) {
                         </select>
                     </div>
                     <div className="input-container">
-                        <label htmlFor="pixelUpperBound" className="input-label">Pixel Value Upper Bound:</label>
-                        <input
-                            id="pixelUpperBound"
-                            type="text"
-                            value={pixelUpperBound}
-                            onChange={(e) => setPixelUpperBound(e.target.value)}
-                            className="input-field"
-                        />
-                    </div>
-                    <div className="input-container">
-                        <label htmlFor="pixelLowerBound" className="input-label">Pixel Value Lower Bound:</label>
+                        <label htmlFor="pixelLowerBound" className="input-label">Pixel Val Lower Bound:</label>
                         <input
                             id="pixelLowerBound"
                             type="text"
                             value={pixelLowerBound}
                             onChange={(e) => setPixelLowerBound(e.target.value)}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="input-container">
+                        <label htmlFor="pixelUpperBound" className="input-label">Pixel Val Upper Bound:</label>
+                        <input
+                            id="pixelUpperBound"
+                            type="text"
+                            value={pixelUpperBound}
+                            onChange={(e) => setPixelUpperBound(e.target.value)}
                             className="input-field"
                         />
                     </div>

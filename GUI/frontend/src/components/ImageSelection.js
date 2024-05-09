@@ -7,7 +7,7 @@ Modal.setAppElement('#root');
 function ImageSelection({ isOpen, imageId, onRequestClose, mode }) {
     const [stat, setStat] = useState('');
 
-    const imageUrl = `http://localhost:8000/topk_results/${imageId}.JPEG`;
+    const imageUrl = `http://localhost:8000/topk_images/${imageId}.JPEG`;
     const statUrl = `http://localhost:8000/topk_labels/${imageId}`
 
     const handleImageLoadError = () => {

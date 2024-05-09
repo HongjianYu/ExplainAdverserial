@@ -94,18 +94,22 @@ def setup():
 def topk_search():
     data = request.json
     k = int(data.get('k'))
-    lv = float(data.get('pixelUpperBound'))
-    uv = float(data.get('pixelLowerBound'))
+    lb, ub = data.get('pixelLowerBound'), data.get('pixelUpperBound')
     order = data.get('order')
-    reverse = False if order == 'DESC' else True
+    lv, uv = float(lb), float(ub)
+    reverse = False if data.get('order') == 'DESC' else True
+    fn = topk_search_ms if data.get('ms') else topk_search_np
 
     query_command = f"""
                      SELECT mask_id
                      FROM MasksDatabaseView
-                     ORDER BY CP(mask, full_image, ({data.get('pixelUpperBound')}, {data.get('pixelLowerBound')})) / area(roi) {order}
+                     ORDER BY CP(mask, full_image, ({lb}, {ub})) / area(roi) {order}
                      LIMIT {k};
                      """
+    return fn(query_command, k, lv, uv, reverse)
 
+
+def topk_search_ms(query_command, k, lv, uv, reverse):
     start = time.time()
     count, images = get_max_area_in_subregion_in_memory_version(
         "imagenet",
@@ -140,23 +144,8 @@ def topk_search():
     return jsonify({'query_command': query_command, 'image_ids': image_ids})
 
 
-@app.route('/api/topk_search_naive', methods=['POST'])
-def topk_search_naive():
-    data = request.json
-    k = int(data.get('k'))
-    lv = float(data.get('pixelUpperBound'))
-    uv = float(data.get('pixelLowerBound'))
-    order = data.get('order')
-    reverse = False if order == 'DESC' else True
+def topk_search_np(query_command, k, lv, uv, reverse):
     vanilla_sort = heapq.nlargest if not reverse else heapq.nsmallest
-
-    query_command = f"""
-                     SELECT mask_id
-                     FROM MasksDatabaseView
-                     ORDER BY CP(mask, full_image, ({data.get('pixelUpperBound')}, {data.get('pixelLowerBound')})) / area(roi) {order}
-                     LIMIT {k};
-                     """
-
     start = time.time()
 
     dispersion_data = []
@@ -171,9 +160,13 @@ def topk_search_naive():
     return jsonify({'query_command': query_command, 'image_ids': image_ids})
 
 
-@app.route('/topk_results/<filename>')
-def topk_image(filename):
+@app.route('/topk_cams/<filename>')
+def topk_cam(filename):
     return send_from_directory(main+'cam_images', filename)
+
+@app.route('/topk_images/<filename>')
+def topk_image(filename):
+    return send_from_directory(main+'pure_images', filename)
 
 
 @app.route('/topk_labels/<image_id>')

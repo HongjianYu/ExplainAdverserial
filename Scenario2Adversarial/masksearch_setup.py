@@ -33,6 +33,13 @@ transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600
 dataset = ImagenettePath(main/"data", size='full',
                          split='val', transform=transform, download=False)
 
+def convert(input_image, multiply=False, BGR=False):
+    multiplier = 255.0 if multiply else 1.0
+    image = input_image * multiplier
+    if BGR:
+        image = image[:, :, ::-1]
+    return image
+
 # %%
 cam_map = shelve.open(str(main) + "/serialized/cam_map")
 image_map = shelve.open(str(main) + "/serialized/image_map")
@@ -40,12 +47,20 @@ correctness_map = shelve.open(str(main) + "/serialized/correctness_map")
 attack_map = shelve.open(str(main) + "/serialized/attack_map")
 
 # %%
-# with tqdm(desc=f"Bind cam images", total=len(cam_map)) as pbar:
+# with tqdm(total=len(cam_map)) as pbar:
 #     for i in range(len(cam_map)):
 #         idx = f"{i}"
 #         image, cam = image_map[idx], cam_map[idx]
 #         cam_image = show_cam_on_image(image, cam)
 #         cv2.imwrite(str(main/"cam_images"/f"{i}.JPEG"), cam_image)
+#         pbar.update(1)
+
+# %%
+# with tqdm(total=len(cam_map)) as pbar:
+#     for i in range(len(cam_map)):
+#         idx = f"{i}"
+#         image = convert(image_map[idx], multiply=True, BGR=True)
+#         cv2.imwrite(str(main/"pure_images"/f"{i}.JPEG"), image)
 #         pbar.update(1)
 
 # %%
