@@ -12,16 +12,16 @@ function ResultsSection({ imageIds, mode, onSelectImage }) {
     }
 
     return (
-        <div className="results-section">
-            {imageIds.map((id) => (
-                <img
-                    key={id}
-                    src={`http://localhost:8000/${imagePath}/${id}.JPEG`}
-                    alt={`Image ${id}`}
-                    onClick={() => onSelectImage(id)}
-                />
-            ))}
-        </div>
+            <div className="results-section">
+                {imageIds.map((id) => (
+                    <img
+                        key={id}
+                        src={`http://localhost:8000/${imagePath}/${id}.JPEG`}
+                        alt={`Image ${id}`}
+                        onClick={() => onSelectImage(id)}
+                    />
+                ))}
+            </div>
     );
 }
 

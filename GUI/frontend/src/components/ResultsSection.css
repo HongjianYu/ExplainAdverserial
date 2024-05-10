@@ -3,6 +3,7 @@
 .results-section {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 60px;
     gap: 10px;
     justify-content: flex-start;
     align-items: flex-start;

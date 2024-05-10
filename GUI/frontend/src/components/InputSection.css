@@ -232,7 +232,7 @@ input:checked + .slider:before {
 .inner:before {
     content: "MS";
     padding-left: 10px;
-    background-color: #060;
+    background-color: #007bff;
     color: #fff;
 }
 
