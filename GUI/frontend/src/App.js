@@ -13,6 +13,8 @@ function App() {
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
   const [isAugment, setAugment] = useState(false);
+  // field for time
+  const [executionTime, setExecutionTime] = useState(0);
 
   // Handle the search results from InputSection
   const handleSearchResults = (results) => {
@@ -54,8 +56,17 @@ function App() {
           <Route path="/input" element={
             <div className="main-content">
               {/* TODO: add a field for augment in both InputSection and ResultsSection */}
-              <InputSection onSearchResults={handleSearchResults} onModeChange={handleModeChange} />
-              <ResultsSection imageIds={imageIds} onSelectImage={handleImageClick} mode={mode} />
+              <InputSection 
+                onSearchResults={handleSearchResults}
+                onModeChange={handleModeChange}
+                setExecutionTime={setExecutionTime} // Passing setter for execution time
+              />
+              <ResultsSection 
+                imageIds={imageIds}
+                onSelectImage={handleImageClick} 
+                mode={mode}
+                executionTime={executionTime} // Passing execution time to ResultsSection
+              />
               {selectedImageId && (
                   <ImageSelection
                       isOpen={!!selectedImageId}

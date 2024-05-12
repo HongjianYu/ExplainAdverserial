@@ -4,7 +4,7 @@ import QueryCommand from './QueryCommand';
 import './InputSection.css';
 
 // TODO: Add the field for augment
-function InputSection({ onSearchResults, onModeChange }) {
+function InputSection({ onSearchResults, onModeChange, setExecutionTime }) {
     const [mode, setMode] = useState('Top-K');
     const [k, setK] = useState('5');
     const [roi, setRoi] = useState('object bounding box');
@@ -26,7 +26,12 @@ function InputSection({ onSearchResults, onModeChange }) {
             },
             body: JSON.stringify(body),
         });
-        return response.json();
+        const data = await response.json();
+        setQueryCommand(data.query_command);
+        onSearchResults(data.image_ids);
+        setExecutionTime(data.execution_time);  // Set execution time received from the backend
+        setIsQueryActive(true); // Enable the Augment button
+        return data;
     };
 
     const handleStartQuery = async () => {
@@ -44,10 +49,7 @@ function InputSection({ onSearchResults, onModeChange }) {
             body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
         }
 
-        const data = await fetchQueryCommand(path, body);
-        setQueryCommand(data.query_command);
-        onSearchResults(data.image_ids);
-        setIsQueryActive(true); // Enable the Augment button
+        await fetchQueryCommand(path, body);
     };
 
     const handleShowExecution = () => {
