@@ -1,6 +1,7 @@
+// ITERATION WORKS
 // src/App.js
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import InputSection from './components/InputSection';
 import ResultsSection from './components/ResultsSection';
 import ImageSelection from './components/ImageSelection';
@@ -10,65 +11,55 @@ import './App.css';
 
 function App() {
   const [imageIds, setImageIds] = useState([]);
-  const [aug, setAug] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
-  const [toggle, setEnable] = useState(false);
+  const [isAugment, setAugment] = useState(false);
+  const [executionTime, setExecutionTime] = useState(0);
+  const [imagesCount, setImagesCount] = useState(0); // Add this line
 
-  // Handle the search results from InputSection
   const handleSearchResults = (results) => {
-    setImageIds(results); // Assuming results is an array of image IDs
+    setImageIds(results);
   };
 
-  // Function to update mode from InputSection
   const handleModeChange = (newMode) => {
-    setMode(newMode); // Update the mode based on user selection
+    setMode(newMode);
   };
 
-  // Handle the selected image from ResultsSection
   const handleImageClick = (imageId) => {
     setSelectedImageId(imageId);
   };
 
-  // Close the ImageSelection modal
   const closeImageSelection = () => {
     setSelectedImageId(null);
   };
 
-  // TODO: Keep track of the Augment status
   const handleStartAugment = (status) => {
-    setAug(status);
-  }
-
-  // Handler for toggling the slider
-  const handleToggle = () => {
-    setEnable(!toggle); // Toggle the state when the slider is clicked
+    setAugment(status);
   };
 
   return (
     <Router>
       <div className="app">
         <header className="app-header">
-          MaskSearch     
-          {/* Link to Data Preparation page */}
-          {/* <nav>
-            <Link to="/data-preparation">Data Preparation</Link>
-          </nav> */}
+          MaskSearch
         </header>
-        <label class="switch">
-            <input type="checkbox" checked={toggle} onChange={handleToggle} />
-            <span class="slider round"></span>
-            <span class='slider-label'>Slide to enable MaskSearch</span>
-        </label>
-        
         <Routes>
           <Route path="/data-preparation" element={<DataPreparation />} />
           <Route path="/input" element={
-            
             <div className="main-content">
-              {/* TODO: add a field for augment in both InputSection and ResultsSection */}
-              <InputSection onSearchResults={handleSearchResults} onModeChange={handleModeChange} isAug={handleStartAugment} ms={toggle}/>
-              <ResultsSection imageIds={imageIds} onSelectImage={handleImageClick} mode={mode} aug={aug}/>
+              <InputSection 
+                onSearchResults={handleSearchResults}
+                onModeChange={handleModeChange}
+                setExecutionTime={setExecutionTime} // Pass setExecutionTime
+                setImagesCount={setImagesCount} // Pass setImagesCount
+              />
+              <ResultsSection 
+                imageIds={imageIds}
+                onSelectImage={handleImageClick} 
+                mode={mode}
+                executionTime={executionTime} // Pass executionTime
+                imagesCount={imagesCount} // Pass imagesCount
+              />
               {selectedImageId && (
                   <ImageSelection
                       isOpen={!!selectedImageId}
@@ -79,7 +70,6 @@ function App() {
               )}
             </div>
           } />
-          {/* Redirect from home to /data-preparation */}
           <Route path="/" element={<DataPreparation />} />
         </Routes>
       </div>
