@@ -139,9 +139,11 @@ def topk_search_ms(query_command, k, lv, uv, reverse):
     )
     image_ids = [image_idx for (metric, area, image_idx) in images]
     end = time.time()
+
+    execution_time = end - start
     print("Skipped images:", count)
-    print("(MaskSearch vanilla) Query time (cold cache):", end - start)
-    return jsonify({'query_command': query_command, 'image_ids': image_ids})
+    print("(MaskSearch vanilla) Query time (cold cache):", execution_time)
+    return jsonify({'query_command': query_command, 'image_ids': image_ids, 'skipped_images_count': count, 'execution_time': execution_time})
 
 
 def topk_search_np(query_command, k, lv, uv, reverse):
@@ -156,8 +158,10 @@ def topk_search_np(query_command, k, lv, uv, reverse):
 
     image_ids = [image_idx for (image_idx, dispersion) in top_k]
     end = time.time()
+
+    execution_time = end - start
     print("(Numpy naive) Query time:", end - start)
-    return jsonify({'query_command': query_command, 'image_ids': image_ids})
+    return jsonify({'query_command': query_command, 'image_ids': image_ids, 'skipped_images_count': 0, 'execution_time': execution_time})
 
 
 @app.route('/topk_cams/<filename>')
