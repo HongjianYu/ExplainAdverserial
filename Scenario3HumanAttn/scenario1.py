@@ -3,12 +3,12 @@ from flask_cors import CORS, cross_origin
 import numpy as np
 import sys
 import json
-import os
-sys.path.append("/Users/edwardyeung/Sal/MaskSearchDemo-main/Scenario1Wilds")
+sys.path.append("/Users/linxiwei/Documents/MaskSearch/Archive/wilds")
 from topk import *
+from s1_data_process import data_process
 app = Flask(__name__)
 CORS(app)
-#INTERATION WORKS
+
 
 @app.route('/api/topk_search', methods=['POST'])
 def topk_search():
@@ -19,7 +19,7 @@ def topk_search():
     pixel_upper_bound = data.get('pixelUpperBound')
     pixel_lower_bound = data.get('pixelLowerBound')
     order = data.get('order')
-    reverse = True if order == 'DESC' else False
+    reverse = False if order == 'DESC' else True
 
     
     query_command = f"""
@@ -40,6 +40,27 @@ def topk_search():
     lv = 0.0
     uv = 1.0
     region = (0, 0, 384, 384)
+    print(enable)
+    if not enable:
+        v = 0.1 if reverse else 0.9
+        region_area_threshold = 5000
+        imag = naive_get_images_satisfying_filter(
+            cam_map,
+            object_detection_map,
+            cam_size_y,
+            cam_size_x,
+            dataset_examples,
+            lv,
+            uv,
+            region,
+            v,
+            region_area_threshold,
+            ignore_zero_area_region=True,
+            compression=None,
+            reverse=reverse,
+            visualize=False,
+        )
+        
    
     count, images = get_max_IoU_across_masks_in_memory(
         cam_size_y=384,
@@ -59,13 +80,10 @@ def topk_search():
         available_coords=available_coords,
         compression=None,
     )
-    print("here")
-    print(count)
+    #print(images)
     image_ids = [int(image_idx) for (metric, image_idx) in images]
     end = time.time()
     time_used = end - start
-    print("time1: ", time_used)
-    print(image_ids)
     execution_time = round(time_used, 3)
     return jsonify({'query_command': query_command, 'image_ids': image_ids, 'execution_time': execution_time, 'images_count': len(image_ids)})
 
@@ -82,7 +100,6 @@ def augment():
 
 @app.route('/api/filter_search', methods=['POST'])
 def filter_search():
-    print("round")
     data = request.json
     threshold = data.get('threshold')
     enable = data.get('ms')
@@ -105,7 +122,7 @@ def filter_search():
     # FROM MasksDatabaseView
     # WHERE CP(mask, roi, ({pixel_lower_bound}, {pixel_upper_bound})) / area(roi) {comparison} {threshold};
     # """
-    start = time.time()
+
     cam_size_x = 384
     cam_size_y = 384
     hist_size = 2
@@ -117,7 +134,25 @@ def filter_search():
     uv = 1.0
     region = (0, 0, 384, 384)
    
-
+    start = time.time()
+    if not enable:
+        region_area_threshold = 5000
+        imag = naive_get_images_satisfying_filter(
+            cam_map,
+            object_detection_map,
+            cam_size_y,
+            cam_size_x,
+            dataset_examples,
+            lv,
+            uv,
+            region,
+            v,
+            region_area_threshold,
+            ignore_zero_area_region=True,
+            compression=None,
+            reverse=reverse,
+            visualize=False,
+        )
     count, images = get_Filter_IoU_across_masks_in_memory(
         cam_size_y=384,
         cam_size_x=384,
@@ -136,48 +171,54 @@ def filter_search():
         available_coords=available_coords,
         compression=None,
     )
+    #print("filter: ", images)
     num = 0
+    images_count = len(images)
     if(len(images)>50): 
         num = 50
-        print("haha")
     else: 
         num = len(images)
+    
+    print(reverse)
+    images = sorted(
+        [(item[0], item[1]) for item in images], reverse=not reverse
+    )
+    print(images)
     image_ids = [int(image_idx) for (metric,image_idx) in images[:num]]
-    print("there")
-    #image_ids = np.array(map(str, image_ids))
     end = time.time()
     time_used = end - start
-    print("time2: ", time_used)
     execution_time = round(time_used, 3)
-    return jsonify({'query_command': query_command, 'image_ids': image_ids, 'execution_time' : execution_time, 'images_count': 11788 - count})
-
-BASE_DIR = "/Users/edwardyeung/Sal/MaskSearchDemo-main/GUI/backend"
+    
+    return jsonify({'query_command': query_command, 'image_ids': image_ids, 'execution_time' : execution_time, 'images_count': images_count})
+   
 
 @app.route('/saliency_images/<filename>')
 def topk_image(filename):
-    return send_from_directory(os.path.join(BASE_DIR, 'saliency_images'), filename)
+    return send_from_directory('saliency_images', filename)
 
 @app.route('/human_att_images/<filename>')
 def filter_image(filename):
-    return send_from_directory(os.path.join(BASE_DIR, 'human_att_images'), filename)
+    return send_from_directory('human_att_images', filename)
+
+@app.route('/augment_results/<filename>')
+def augment_image(filename):
+    return send_from_directory('augment_results', filename)
 
 @app.route('/intersect_visualization/<filename>')
 def intersect_image(filename):
-    return send_from_directory(os.path.join(BASE_DIR, 'intersect_visualization'), filename)
+    return send_from_directory('intersect_visualization', filename)
 
 @app.route('/union_visualization/<filename>')
 def union_image(filename):
-    return send_from_directory(os.path.join(BASE_DIR, 'union_visualization'), filename)
-
-
+    return send_from_directory('union_visualization', filename)
 
 if __name__ == '__main__':
     #app.run(debug=True)
-    
+    id_val_data, ood_val_data, label_map, pred_map, cam_map, object_detection_map, dataset_examples, in_memory_index_suffix, image_access_order, sorted_class_pairs, names= data_process()
     in_memory_index_suffix_in = np.load(
-        f"/Users/edwardyeung/Sal/intersect_index.npy"
+        f"/Users/linxiwei/Documents/MaskSearch/Archive/wilds/intersect_index.npy"
     )
     in_memory_index_suffix_un = np.load(
-        f"/Users/edwardyeung/Sal/union_index.npy"
+        f"/Users/linxiwei/Documents/MaskSearch/Archive/wilds/union_index.npy"
     )
-    app.run(port=8000)
+    app.run(port=8080)
