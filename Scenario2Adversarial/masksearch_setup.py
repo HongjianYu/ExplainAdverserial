@@ -64,6 +64,13 @@ attack_map = shelve.open(str(main) + "/serialized/attack_map")
 #         pbar.update(1)
 
 # %%
+# with tqdm(total=len(cam_map)) as pbar:
+#     for i in range(len(cam_map)):
+#         idx = f"{i}"
+#         cv2.imwrite(str(main/"cams"/f"{i}.JPEG"), cam_map[idx] * 255.0)
+#         pbar.update(1)
+
+# %%
 image_total = len(dataset)
 dataset_examples = []
 for i in range(image_total):
