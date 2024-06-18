@@ -14,6 +14,7 @@ function App() {
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
   const [isAugment, setAugment] = useState(false);
+  const [toggle, setEnable] = useState(false);
   const [executionTime, setExecutionTime] = useState(0);
   const [imagesCount, setImagesCount] = useState(0); // Add this line
 
@@ -37,12 +38,22 @@ function App() {
     setAugment(status);
   };
 
+  // Handler for toggling the slider
+  const handleToggle = () => {
+    setEnable(!toggle); // Toggle the state when the slider is clicked
+  };
+
   return (
     <Router>
       <div className="app">
         <header className="app-header">
           MaskSearch
         </header>
+        <label class="switch">
+            <input type="checkbox" checked={toggle} onChange={handleToggle} />
+            <span class="slider round"></span>
+            <span class='slider-label'>Toggle to Enable MaskSearch</span>
+        </label>
         <Routes>
           <Route path="/data-preparation" element={<DataPreparation />} />
           <Route path="/input" element={
@@ -50,6 +61,7 @@ function App() {
               <InputSection 
                 onSearchResults={handleSearchResults}
                 onModeChange={handleModeChange}
+                ms={toggle}
                 setExecutionTime={setExecutionTime} // Pass setExecutionTime
                 setImagesCount={setImagesCount} // Pass setImagesCount
               />
