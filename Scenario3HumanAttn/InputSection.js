@@ -1,10 +1,8 @@
-// src/components/InputSection.js
 import React, { useState } from 'react';
 import QueryCommand from './QueryCommand';
 import './InputSection.css';
 
-// TODO: Add the field for augment
-function InputSection({ onSearchResults, onModeChange }) {
+function InputSection({ onSearchResults, onModeChange, ms, setExecutionTime, setImagesCount }) {
     const [mode, setMode] = useState('Top-K');
     const [k, setK] = useState('5');
     const [roi, setRoi] = useState('object bounding box');
@@ -17,9 +15,8 @@ function InputSection({ onSearchResults, onModeChange }) {
     const [isQueryActive, setIsQueryActive] = useState(false);
     const [isPathActive, setIsPathActive] = useState(false);
 
-
     const fetchQueryCommand = async (path, body) => {
-        const response = await fetch(`http://localhost:8000${path}`, {
+        const response = await fetch(`http://localhost:8080${path}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -33,11 +30,11 @@ function InputSection({ onSearchResults, onModeChange }) {
         let path, body;
         if (mode === 'Top-K') {
             path = '/api/topk_search';
-            body = { k, roi, pixelUpperBound, pixelLowerBound, order };
+            body = { k, roi, pixelUpperBound, pixelLowerBound, order, ms };
         } 
         if (mode === 'Filter') {
             path = '/api/filter_search';
-            body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound };
+            body = { threshold, thresholdDirection, roi, pixelUpperBound, pixelLowerBound, ms};
         }
         if (mode === 'Aggregation') {
             path = '/api/filter_search';
@@ -47,30 +44,27 @@ function InputSection({ onSearchResults, onModeChange }) {
         const data = await fetchQueryCommand(path, body);
         setQueryCommand(data.query_command);
         onSearchResults(data.image_ids);
-        setIsQueryActive(true); // Enable the Augment button
+        setExecutionTime(data.execution_time); // Add this line
+        setImagesCount(data.images_count); // Add this line
+        setIsQueryActive(false); // Enable the Augment button
     };
 
-    const handleShowExecution = () => {
-        // Implement later, make a window to show path
-    };
+    // const handleShowExecution = () => {
+    //     // Implement later, make a window to show path
+    // };
 
-    const handleStartAugment = async () => {
-        // const response = await fetch('http://localhost:5000/api/augment');
-        // const data = await response.json();
-        // console.log('Augment result:', data.result);
-        setIsPathActive(true);
-        // TODO: Set the status of augment to true, other necessary implementation for augment
-    };
+    // const handleStartAugment = async () => {
+    //     setIsPathActive(false);
+    // };
 
-    const handleShowPath = () => {
-        // Implement later, make a window to show path
-    };
+    // const handleShowPath = () => {
+    //     // Implement later, make a window to show path
+    // };
 
     const handleModeChange = (newMode) => {
         setMode(newMode); // Update local state
         setIsQueryActive(false); // Reset the active state when changing modes
         onModeChange(newMode); // Inform the parent component about the mode change
-        // TODO: Reset the status of augment to false when changing modes
     };
 
     return (
@@ -84,7 +78,6 @@ function InputSection({ onSearchResults, onModeChange }) {
             </div>
             {mode === 'Top-K' ? (
                 <>
-                    {/* Top-K specific fields */}
                     <div className="input-container">
                         <label htmlFor="K" className="input-label">K:</label>
                         <select id="k" value={k} onChange={(e) => setK(e.target.value)} className="input-field">
@@ -132,7 +125,6 @@ function InputSection({ onSearchResults, onModeChange }) {
                 </>
             ) : mode === 'Filter' ? (
                 <>
-                    {/* Filter specific fields */}
                     <div className="input-container">
                         <label htmlFor="threshold" className="input-label">Threshold:</label>
                         <div className="threshold-container">
@@ -185,7 +177,6 @@ function InputSection({ onSearchResults, onModeChange }) {
                 </>
             ) : (
                 <>
-                    {/* Filter specific fields */}
                     <div className="input-container">
                         <label htmlFor="threshold" className="input-label">Threshold:</label>
                         <div className="threshold-container">
@@ -236,24 +227,23 @@ function InputSection({ onSearchResults, onModeChange }) {
                         />
                     </div>
                 </>
-            ) }
+            )}
             <div className="halfsize-buttons">
                 <button className="start-halfsize-btn" onClick={handleStartQuery}>
                     Start Query
                 </button>
-                <button className="appending-halfsize-btn" onClick={handleShowExecution} disabled={!isQueryActive}>
+                {/* <button className="appending-halfsize-btn" onClick={handleShowExecution} disabled={!isQueryActive}>
                     Execution Detail
-                </button>
+                </button> */}
             </div>
-            <div className="halfsize-buttons">
+            {/* <div className="halfsize-buttons">
                 <button className="start-halfsize-btn" onClick={handleStartAugment} disabled={!isPathActive}>
                     Start Augment
                 </button>
                 <button className="appending-halfsize-btn" onClick={handleShowPath} disabled={!isPathActive}>
                     Show Path
                 </button>
-            </div>
-            {/* <button onClick={() => {}} disabled={!isQueryActive}>Start Augment</button> */}
+            </div> */}
             <QueryCommand command={queryCommand} />
         </div>
     );
