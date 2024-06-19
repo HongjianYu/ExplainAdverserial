@@ -1,6 +1,6 @@
 ## Scenario 2 Setup
 
-### [Download the prescribed zip files here (~30GB)](https://drive.google.com/drive/folders/1UGKixXdXw0oGPmhF-3aXiYW-BiNbbptu?usp=sharing) to replace the placeholder directories
+### [Download the prescribed zip files here](https://drive.google.com/drive/folders/1UGKixXdXw0oGPmhF-3aXiYW-BiNbbptu?usp=sharing) to replace the placeholder directories
 ```
 cam_images
 npy
@@ -14,13 +14,13 @@ serialized
 conda create --name masksearch_s2 --file ./Scenario2Adversarial/packageslist.txt
 ```
 
-### Initialize (Additional ~30GB space required)
+### Initialize
 ```
 npm install
 python ./Scenario2Adversarial/prepare_serialized.py
 ```
 
-### Start fe/be
+### Start
 ```
 npm start
 python ./GUI/backend/scenario2.py
