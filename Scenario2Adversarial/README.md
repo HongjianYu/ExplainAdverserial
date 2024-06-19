@@ -22,6 +22,6 @@ python ./Scenario2Adversarial/prepare_serialized.py
 
 ### Start
 ```
-npm start
+npm start  # localhost:3000
 python ./GUI/backend/scenario2.py
 ```
