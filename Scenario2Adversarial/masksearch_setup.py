@@ -47,8 +47,8 @@ correctness_map = shelve.open(str(main) + "/serialized/correctness_map")
 attack_map = shelve.open(str(main) + "/serialized/attack_map")
 
 # %%
-# with tqdm(total=len(cam_map)) as pbar:
-#     for i in range(len(cam_map)):
+# with tqdm(total=len(image_map)) as pbar:
+#     for i in range(len(image_map)):
 #         idx = f"{i}"
 #         image, cam = image_map[idx], cam_map[idx]
 #         cam_image = show_cam_on_image(image, cam)
@@ -56,18 +56,11 @@ attack_map = shelve.open(str(main) + "/serialized/attack_map")
 #         pbar.update(1)
 
 # %%
-# with tqdm(total=len(cam_map)) as pbar:
-#     for i in range(len(cam_map)):
+# with tqdm(total=len(image_map)) as pbar:
+#     for i in range(len(image_map)):
 #         idx = f"{i}"
 #         image = convert(image_map[idx], multiply=True, BGR=True)
 #         cv2.imwrite(str(main/"pure_images"/f"{i}.JPEG"), image)
-#         pbar.update(1)
-
-# %%
-# with tqdm(total=len(cam_map)) as pbar:
-#     for i in range(len(cam_map)):
-#         idx = f"{i}"
-#         cv2.imwrite(str(main/"cams"/f"{i}.JPEG"), cam_map[idx] * 255.0)
 #         pbar.update(1)
 
 # %%

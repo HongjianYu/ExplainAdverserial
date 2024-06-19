@@ -272,7 +272,7 @@ if visualize:
         # plt.imshow(cam_display)
         # plt.axis('off')
         # plt.show()
-        cv2.imwrite(str(main/"results"/f"cam_display_{i + 1}.JPEG"), cam_display)
+        cv2.imwrite(str(main/"numpy_results"/f"cam_display_{i + 1}.JPEG"), cam_display)
         # print(f"dispersion={dispersion}, classification={correctness}, attack={attack}")
 
 end = time.time()
