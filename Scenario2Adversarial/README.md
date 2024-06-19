@@ -1,6 +1,6 @@
 ## Scenario 2 Setup
 
-### [Download the prescribed zip files here (~30GB)]() to replace the placeholder directories
+### [Download the prescribed zip files here (~30GB)](https://drive.google.com/drive/folders/1UGKixXdXw0oGPmhF-3aXiYW-BiNbbptu?usp=sharing) to replace the placeholder directories
 ```
 cam_images
 npy
