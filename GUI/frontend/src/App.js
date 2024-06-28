@@ -13,17 +13,22 @@ function App() {
   const [selectedImageId, setSelectedImageId] = useState(null);
   const [mode, setMode] = useState('Top-K');
   const [isAugment, setAugment] = useState(false);
-  // field for time
+  const [toggle, setEnable] = useState(false);
   const [executionTime, setExecutionTime] = useState(0);
+  const [imagesCount, setImagesCount] = useState(0);
+  const [skippedImages, setSkippedImages] = useState(0);
+  const [queryPerformed, setQueryPerformed] = useState(false);
 
   // Handle the search results from InputSection
   const handleSearchResults = (results) => {
-    setImageIds(results); // Assuming results is an array of image IDs
+    setImageIds(results);
+    setQueryPerformed(true);
   };
 
   // Function to update mode from InputSection
   const handleModeChange = (newMode) => {
-    setMode(newMode); // Update the mode based on user selection
+    setMode(newMode);
+    setQueryPerformed(false);
   };
 
   // Handle the selected image from ResultsSection
@@ -36,48 +41,130 @@ function App() {
     setSelectedImageId(null);
   };
 
-  // TODO: Keep track of the Augment status
+  // Toggle the state when the slider is clicked
+  const handleToggle = () => {
+    setEnable(!toggle);
+  };
+
   const handleStartAugment = (status) => {
     setAugment(status);
-  }
+  };
 
   return (
     <Router>
       <div className="app">
         <header className="app-header">
-          MaskSearch
-          {/* Link to Data Preparation page */}
-          {/* <nav>
-            <Link to="/data-preparation">Data Preparation</Link>
-          </nav> */}
+          <div className="header-title">
+            MaskSearch
+          </div>
+          <nav>
+            <Link to="/scenario1">Scenario 1</Link>
+            <Link to="/scenario2">Scenario 2</Link>
+            <Link to="/scenario3">Scenario 3</Link>
+          </nav>
         </header>
+        <div className="toggle-container">
+          <label className="switch">
+            <input type="checkbox" checked={toggle} onChange={handleToggle} />
+            <span className="slider round"></span>
+          </label>
+          <span className='slider-label'>Toggle to Enable MaskSearch</span>
+        </div>
         <Routes>
           <Route path="/data-preparation" element={<DataPreparation />} />
-          <Route path="/input" element={
+          <Route path="/scenario1" element={
             <div className="main-content">
-              {/* TODO: add a field for augment in both InputSection and ResultsSection */}
               <InputSection 
+                scenario="scenario1"
                 onSearchResults={handleSearchResults}
                 onModeChange={handleModeChange}
-                setExecutionTime={setExecutionTime} // Passing setter for execution time
+                setExecutionTime={setExecutionTime}
+                isAug={handleStartAugment}
+                ms={toggle}
               />
-              <ResultsSection 
-                imageIds={imageIds}
-                onSelectImage={handleImageClick} 
-                mode={mode}
-                executionTime={executionTime} // Passing execution time to ResultsSection
-              />
+              {queryPerformed && (
+                <ResultsSection 
+                  scenario="scenario1"
+                  imageIds={imageIds}
+                  onSelectImage={handleImageClick} 
+                  mode={mode}
+                  aug={isAugment}
+                  executionTime={executionTime}
+                />
+              )}
               {selectedImageId && (
-                  <ImageSelection
-                      isOpen={!!selectedImageId}
-                      imageId={selectedImageId}
-                      onRequestClose={closeImageSelection}
-                      mode={mode}
-                  />
+                <ImageSelection
+                  scenario="scenario1"
+                  isOpen={!!selectedImageId}
+                  imageId={selectedImageId}
+                  onRequestClose={closeImageSelection}
+                  mode={mode}
+                />
               )}
             </div>
           } />
-          {/* Redirect from home to /data-preparation */}
+          <Route path="/scenario2" element={
+            <div className="main-content">
+              <InputSection 
+                scenario="scenario2"
+                onSearchResults={handleSearchResults}
+                onModeChange={handleModeChange}
+                setExecutionTime={setExecutionTime}
+                ms={toggle}
+                setSkippedImages={setSkippedImages}
+              />
+              {queryPerformed && (
+                <ResultsSection 
+                  scenario="scenario2"
+                  imageIds={imageIds}
+                  onSelectImage={handleImageClick} 
+                  mode={mode}
+                  executionTime={executionTime}
+                  skippedImages={skippedImages}
+                />
+              )}
+              {selectedImageId && (
+                <ImageSelection
+                  scenario="scenario2"
+                  isOpen={!!selectedImageId}
+                  imageId={selectedImageId}
+                  onRequestClose={closeImageSelection}
+                  mode={mode}
+                />
+              )}
+            </div>
+          } />
+          <Route path="/scenario3" element={
+            <div className="main-content">
+              <InputSection 
+                scenario="scenario3"
+                onSearchResults={handleSearchResults}
+                onModeChange={handleModeChange}
+                setExecutionTime={setExecutionTime}
+                ms={toggle}
+                setImagesCount={setImagesCount}
+              />
+              {queryPerformed && (
+                <ResultsSection 
+                  scenario="scenario3"
+                  imageIds={imageIds}
+                  onSelectImage={handleImageClick} 
+                  mode={mode}
+                  executionTime={executionTime}
+                  imagesCount={imagesCount}
+                />
+              )}
+              {selectedImageId && (
+                <ImageSelection
+                  scenario="scenario3"
+                  isOpen={!!selectedImageId}
+                  imageId={selectedImageId}
+                  onRequestClose={closeImageSelection}
+                  mode={mode}
+                />
+              )}
+            </div>
+          } />
           <Route path="/" element={<DataPreparation />} />
         </Routes>
       </div>
@@ -86,3 +173,4 @@ function App() {
 }
 
 export default App;
+
