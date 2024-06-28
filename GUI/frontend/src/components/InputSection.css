@@ -1,13 +1,11 @@
-/* src/components/InputSection.css */
-
 .input-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     width: 30%;
     margin-right: 20px;
     background-color: #f0f0f0;
-    padding: 20px;
+    padding: 15px;
     border-radius: 8px;
 }
 
@@ -15,47 +13,48 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px; /* Spacing between each input-label pair */
+    margin-bottom: 8px;
 }
 
 /* Style for labels to ensure they align properly with their input/dropdown */
 .input-label {
     white-space: nowrap;
-    margin-right: 10px;
+    margin-right: 8px;
     font-weight: bold;
 }
 
-/* Unified style for input fields and dropdowns to match button height but half its length */
 .input-field, .input-section select {
-    height: 40px;
-    padding: 10px 10px;
+    height: 35px;
+    padding: 8px;
     border: 1px solid #007bff;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     width: 50%;
     font-weight: bold;
 }
 
+/* Read-only style */
+.input-field.read-only {
+    background-color: #e0e0e0;
+    color: #777;
+    cursor: not-allowed;
+}
+
 .threshold-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     width: 50%;
 }
 
 .threshold-field {
-    flex: 1;
-    height: 40px;
+    width: 50%;
+    height: 35px;
     border: 1px solid #007bff; 
     border-radius: 5px;
-    padding: 0 10px;
-    font-size: 1rem;
+    padding: 0 8px;
+    font-size: 0.95rem;
     font-weight: bold;
-}
-
-/* Ensure this class targets only the direct children (fields) of .threshold-container */
-.input-container > .threshold-container > .threshold-field {
-    width: calc(25% - 5px); /* ensure this makes each about 1/4 the length of a button */
 }
 
 .input-section .header {
@@ -65,18 +64,17 @@
 }
 
 .input-section .header .title {
-    margin: 0; /* Remove margin from h2 */
+    margin: 0;
 }
 
 .input-section .mode-switch {
     display: flex;
-    gap: 10px; /* Adjust the gap between buttons as needed */
+    gap: 8px;
 }
 
 .input-section .mode-switch button {
-    padding: 5px 10px; /* Smaller padding */
-    font-size: 0.8rem; /* Smaller font size */
-    margin: 0;
+    padding: 8px 12px;
+    font-size: 0.85rem;
     border: 1px solid #007bff;
     background-color: #fff;
     color: #007bff;
@@ -91,17 +89,14 @@
 .input-section button {
     background-color: #007bff;
     color: white;
-    padding: 10px 20px;
-    margin-right: -10px;
+    padding: 8px 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 1rem;
-    margin-right: 10px;
+    font-size: 0.95rem;
     transition: background-color 0.3s ease;
     font-weight: bold;
 }
-
 
 .input-section button:hover {
     background-color: #0056b3;
@@ -112,37 +107,29 @@
     cursor: not-allowed;
 }
 
-/* Specific container for augment buttons */
 .halfsize-buttons {
     display: flex;
-    gap: 10px; /* Space between buttons */
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .start-halfsize-btn, .appending-halfsize-btn {
     flex: none;
-    width: calc(50% - 5px);
+    width: calc(50% - 4px);
     background-color: #007bff;
     color: white;
-    padding: 10px 20px;
+    padding: 8px 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
 }
 
-/* Adjust the disabled state as before */
-.input-section button:disabled, .appending-halfsize-btn:disabled {
+.appending-halfsize-btn:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
 
-/* Style for hover state */
-.input-section button:hover, .start-halfsize-btn:hover {
+.start-halfsize-btn:hover {
     background-color: #0056b3;
-}
-
-/* Style for 'Show Path' button when it is active */
-.appending-halfsize-btn:enabled {
-    background-color: #007bff;
-    cursor: pointer;
 }
