@@ -41,26 +41,7 @@ def topk_search():
     uv = 1.0
     region = (0, 0, 384, 384)
     print(enable)
-    if not enable:
-        v = 0.1 if reverse else 0.9
-        region_area_threshold = 5000
-        imag = naive_get_images_satisfying_filter(
-            cam_map,
-            object_detection_map,
-            cam_size_y,
-            cam_size_x,
-            dataset_examples,
-            lv,
-            uv,
-            region,
-            v,
-            region_area_threshold,
-            ignore_zero_area_region=True,
-            compression=None,
-            reverse=reverse,
-            visualize=False,
-        )
-        
+    
    
     count, images = get_max_IoU_across_masks_in_memory(
         cam_size_y=384,
@@ -135,24 +116,7 @@ def filter_search():
     region = (0, 0, 384, 384)
    
     start = time.time()
-    if not enable:
-        region_area_threshold = 5000
-        imag = naive_get_images_satisfying_filter(
-            cam_map,
-            object_detection_map,
-            cam_size_y,
-            cam_size_x,
-            dataset_examples,
-            lv,
-            uv,
-            region,
-            v,
-            region_area_threshold,
-            ignore_zero_area_region=True,
-            compression=None,
-            reverse=reverse,
-            visualize=False,
-        )
+   
     count, images = get_Filter_IoU_across_masks_in_memory(
         cam_size_y=384,
         cam_size_x=384,
