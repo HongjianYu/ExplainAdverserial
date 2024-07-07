@@ -1,22 +1,84 @@
 .results-section {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Spacing between images */
-    justify-content: flex-start;
+    gap: 10px;
+    justify-content: center;
     align-items: flex-start;
-    overflow-y: auto; /* Make the container scrollable */
-    height: calc(100vh - 150px); /* Adjust the height based on your layout, accounting for headers, footers, etc. */
-    padding: 10px; /* Padding inside the container */
+    overflow-y: auto;
+    height: 100%;
+    padding: 10px;
+    background-color: #f0f0f0;
 }
 
-.result-image {
-    width: calc((100% - 50px) / 4); /* Adjusted width for four images per row */
-    height: auto; /* Maintain aspect ratio */
-    object-fit: cover; /* Cover the area of the div without stretching the image */
+.info-box {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    order: -1;
 }
 
+.execution-info, .image-count-info {
+    display: flex;
+    align-items: center;
+}
+
+.time-label, .image-count-label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.time-value, .image-count-value {
+    font-size: 16px;
+    color: #007BFF;
+}
+
+.image-container {
+    display: flex;
+    flex-direction: column; /* Ensure container direction is column */
+    gap: 20px;
+    width: 100%; /* Ensure it fills the parent width */
+}
+
+.image-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.image-wrapper {
+    display: flex;
+    flex-direction: column; /* Column for vertical stacking */
+    align-items: center;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: calc((100% - 40px) / 4); /* Adjust width as needed */
+}
+
+.image-wrapper img {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 5px;
+}
+
+.image-wrapper p {
+    margin: 0;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Resize for smaller screens */
 @media (max-width: 600px) {
-    .result-image {
-        width: calc((100% - 20px) / 2); /* Two images per row for smaller screens */
+    .image-wrapper {
+        width: calc((100% - 20px) / 2); /* Adjust width as needed */
     }
 }
