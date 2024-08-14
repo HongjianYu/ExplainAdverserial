@@ -265,15 +265,15 @@ visualize = False
 k = 20
 top_k = heapq.nlargest(k, zip(image_data, cam_data, correctness_data, attack_data, dispersion_data), key=itemgetter(4))
 
-if visualize:
-    for i, (image, cam, correctness, attack, dispersion) in enumerate(top_k):
-        cam_display = show_cam_on_image(image, cam)
-        # plt.figure()
-        # plt.imshow(cam_display)
-        # plt.axis('off')
-        # plt.show()
-        cv2.imwrite(str(main/"numpy_results"/f"cam_display_{i + 1}.JPEG"), cam_display)
-        # print(f"dispersion={dispersion}, classification={correctness}, attack={attack}")
+# if visualize:
+#     for i, (image, cam, correctness, attack, dispersion) in enumerate(top_k):
+#         cam_display = show_cam_on_image(image, cam)
+#         plt.figure()
+#         plt.imshow(cam_display)
+#         plt.axis('off')
+#         plt.show()
+#         cv2.imwrite(str(main/"numpy_results"/f"cam_display_{i + 1}.JPEG"), cam_display)
+#         print(f"dispersion={dispersion}, classification={correctness}, attack={attack}")
 
 end = time.time()
 
