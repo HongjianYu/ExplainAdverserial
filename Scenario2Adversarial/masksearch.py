@@ -13,8 +13,6 @@ import torch
 import torchvision
 import cv2
 
-from pytorch_grad_cam.utils.image import show_cam_on_image
-
 
 def get_generic_image_id_for_wilds(distribution, idx):
     if distribution == "id_val" or distribution == "id":
@@ -454,12 +452,12 @@ def get_max_area_in_subregion_in_memory_version(
         return count, area_images
     ###
 
-    cnt = 0
-    plt.figure(figsize=(8, 10))
-    tot = len(area_images)
+    # cnt = 0
+    # plt.figure(figsize=(8, 10))
+    # tot = len(area_images)
 
-    if isinstance(region, tuple):
-        x, y, w, h = region
+    # if isinstance(region, tuple):
+    #     x, y, w, h = region
 
     # if dataset == "imagenet":
     #     image_map = imagenet_random_access_images(
@@ -470,47 +468,47 @@ def get_max_area_in_subregion_in_memory_version(
     #         dp[0], dp[1], [image_idx for (metric, area, image_idx) in area_images]
     #     )
 
-    filepath = '/homes/gws/hjyu/MaskSearchDemo/Scenario2Adversarial/masksearch_results'
-    shutil.rmtree(filepath)
-    os.mkdir(filepath)
-    for j in range(tot):
-        cnt += 1
-        metric, area, image_id = area_images[j]
-        if not isinstance(region, tuple):
-            x, y, w, h = get_object_region(
-                object_detection_map, cam_size_y, cam_size_x, image_id
-            )
+    # filepath = './masksearch_results'
+    # shutil.rmtree(filepath)
+    # os.mkdir(filepath)
+    # for j in range(tot):
+    #     cnt += 1
+    #     metric, area, image_id = area_images[j]
+    #     if not isinstance(region, tuple):
+    #         x, y, w, h = get_object_region(
+    #             object_detection_map, cam_size_y, cam_size_x, image_id
+    #         )
 
-        if w == 0 or h == 0:
-            continue
+    #     if w == 0 or h == 0:
+    #         continue
 
-        if dataset == "imagenet":
-            image = image_map[image_id]
-        else:
-            image = image_map[image_id].reshape(3, 448, 448)
-        cam = cam_map[image_id]
+    #     if dataset == "imagenet":
+    #         image = image_map[image_id]
+    #     else:
+    #         image = image_map[image_id].reshape(3, 448, 448)
+    #     cam = cam_map[image_id]
 
-        correctness, attack = "cr" if correctness_map[image_id] else "icr", "atk" if attack_map[image_id] else "unatk"
-        save_path = filepath + '/masksearch_cam_display_{}_{}_{}.png'.format(j + 1, correctness, attack)
+    #     correctness, attack = "cr" if correctness_map[image_id] else "icr", "atk" if attack_map[image_id] else "unatk"
+    #     save_path = filepath + '/masksearch_cam_display_{}_{}_{}.png'.format(j + 1, correctness, attack)
 
-        image = from_input_to_image_no_axis(image)
-        cam_image = show_cam_on_image(image, cam)
-        # plt.imshow(cam_image)
-        # plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
-        # rect = patches.Rectangle(
-        #     (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
-        # )
-        # fig, ax = plt.subplots(figsize=(8, 8))
-        # plt.ioff()
-        # fig = plt.figure(figsize=(8, 8))
-        # ax = plt.gca()
-        # ax.imshow(cam_image)
-        # ax.add_patch(rect)
-        # plt.axis('off')
-        # # Save the image with the rectangle
-        # plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
-        # plt.imsave(save_path, cam_image)
-        cv2.imwrite(save_path, cam_image)
+    #     image = from_input_to_image_no_axis(image)
+    #     cam_image = show_cam_on_image(image, cam)
+    #     plt.imshow(cam_image)
+    #     plt.title("{}->{}".format(label_map[image_id], pred_map[image_id]))
+    #     rect = patches.Rectangle(
+    #         (x, y), w, h, linewidth=5, edgecolor="b", facecolor="none"
+    #     )
+    #     fig, ax = plt.subplots(figsize=(8, 8))
+    #     plt.ioff()
+    #     fig = plt.figure(figsize=(8, 8))
+    #     ax = plt.gca()
+    #     ax.imshow(cam_image)
+    #     ax.add_patch(rect)
+    #     plt.axis('off')
+    #     # Save the image with the rectangle
+    #     plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
+    #     plt.imsave(save_path, cam_image)
+    #     cv2.imwrite(save_path, cam_image)
 
     # plt.tight_layout()
     # plt.show()

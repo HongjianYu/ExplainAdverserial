@@ -1,6 +1,9 @@
 import sys
-main = "/homes/gws/hjyu/MaskSearchDemo/Scenario2Adversarial/"
-sys.path.append(main)
+from pathlib import Path
+
+# Set main path to scenario root directory (i.e. Scenario2Adversarial)
+main = Path(".").resolve()
+sys.path.append(str(main))
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS, cross_origin
@@ -11,7 +14,7 @@ from torchvision import datasets, transforms
 import heapq
 from operator import itemgetter
 import time
-import pickle
+# import pickle
 import shelve
 
 from masksearch import *
@@ -40,11 +43,11 @@ def compute_dispersion(cam, threshold=(0.3, 0.45)):
 
 
 def setup():
-    transform=  transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-    dataset = ImagenettePath(main+"data", size='full',
-                             split='val', transform=transform, download=False)
+    # transform=  transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
+    # dataset = ImagenettePath(main/"data", size='full',
+    #                          split='val', transform=transform, download=False)
 
-    image_total = len(dataset)
+    image_total = 7768  # len(dataset)
     dataset_examples = []
     for i in range(image_total):
         dataset_examples.append(f"{i}")
@@ -63,31 +66,21 @@ def setup():
     available_coords = 20
 
     in_memory_index_suffix = np.load(
-        main+f"npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy"
+        main/f"npy/imagenet_cam_hist_prefix_{hist_size}_available_coords_{available_coords}_np_suffix.npy"
     )
 
-    image_file = open(main+"serialized/image_data.pkl", "rb")
-    cam_file = open(main+"serialized/cam_data.pkl", "rb")
-    correctness_file = open(main+"serialized/correctness_data.pkl", "rb")
-    attack_file = open(main+"serialized//attack_data.pkl", "rb")
-
-    image_data = pickle.load(image_file)
-    cam_data = pickle.load(cam_file)
-    correctness_data = pickle.load(correctness_file)
-    attack_data = pickle.load(attack_file)
-
-    cam_map = shelve.open(main+"serialized/cam_map")
-    image_map = shelve.open(main+"serialized/image_map")
-    correctness_map = shelve.open(main+"serialized/correctness_map")
-    attack_map = shelve.open(main+"serialized/attack_map")
+    cam_map = shelve.open(main/"shelve/cam_map")
+    image_map = shelve.open(main/"shelve/image_map")
+    correctness_map = shelve.open(main/"shelve/correctness_map")
+    attack_map = shelve.open(main/"shelve/attack_map")
 
     region_area_threshold = 5000
     region = (0, 0, cam_size_x, cam_size_y)
 
-    return dataset, image_total, dataset_examples, image_access_order, \
+    return image_total, dataset_examples, image_access_order, \
            hist_size, hist_edges, bin_width, cam_size_y, cam_size_x, available_coords, \
            in_memory_index_suffix, cam_map, image_map, correctness_map, attack_map, \
-           image_data, cam_data, correctness_data, attack_data, region_area_threshold, region
+           region_area_threshold, region
 
 
 @app.route('/api/topk_search', methods=['POST'])
@@ -151,7 +144,8 @@ def topk_search_np(query_command, k, lv, uv, reverse):
     start = time.time()
 
     dispersion_data = []
-    for cam in cam_data:
+    for idx in cam_map:
+        cam = cam_map[idx]
         dispersion_data.append(compute_dispersion(cam, threshold=(lv, uv)))
 
     top_k = vanilla_sort(k, enumerate(dispersion_data), key=itemgetter(1))
@@ -166,11 +160,11 @@ def topk_search_np(query_command, k, lv, uv, reverse):
 
 @app.route('/topk_cams/<filename>')
 def topk_cam(filename):
-    return send_from_directory(main+'cam_images', filename)
+    return send_from_directory(str(main/'cam_images'), filename)
 
 @app.route('/topk_images/<filename>')
 def topk_image(filename):
-    return send_from_directory(main+'pure_images', filename)
+    return send_from_directory(str(main/'pure_images'), filename)
 
 
 @app.route('/topk_labels/<image_id>')
@@ -179,8 +173,8 @@ def topk_labels(image_id):
 
 
 if __name__ == '__main__':
-    dataset, image_total, dataset_examples, image_access_order, \
+    image_total, dataset_examples, image_access_order, \
     hist_size, hist_edges, bin_width, cam_size_y, cam_size_x, available_coords, \
     in_memory_index_suffix, cam_map, image_map, correctness_map, attack_map, \
-    image_data, cam_data, correctness_data, attack_data, region_area_threshold, region = setup()
+    region_area_threshold, region = setup()
     app.run(port=8000)

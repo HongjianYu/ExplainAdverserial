@@ -13,8 +13,8 @@ from tqdm.notebook import tqdm
 from pathlib import Path
 from PIL import Image
 import cv2
-from pytorch_grad_cam import CAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
+# from pytorch_grad_cam import CAM
+# from pytorch_grad_cam.utils.image import show_cam_on_image
 import pickle
 import shelve
 import heapq
@@ -74,12 +74,12 @@ def convert(input_image, multiply=False, BGR=False):
 
 
 # %%
-# download = False
-# transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
-# dataset = ImagenettePath(main/dataset_name, size='full',
-#                          split='val', transform=transform, download=download)
-# chunk = len(dataset) // num_processes
-# loader = torch.utils.data.DataLoader(dataset, batch_size=chunk, shuffle=False, num_workers=0)
+download = False
+transform=transforms.Compose([transforms.ToTensor(), transforms.Resize((400, 600))])
+dataset = ImagenettePath(main/dataset_name, size='full',
+                         split='val', transform=transform, download=download)
+chunk = len(dataset) // num_processes
+loader = torch.utils.data.DataLoader(dataset, batch_size=chunk, shuffle=False, num_workers=0)
 
 
 # %%

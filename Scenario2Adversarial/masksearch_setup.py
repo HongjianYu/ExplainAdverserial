@@ -3,19 +3,19 @@ import sys
 sys.argv = [""]
 from masksearch import *
 from torchvision import datasets, transforms
-from pytorch_grad_cam.utils.image import show_cam_on_image
 from pathlib import Path
 from PIL import Image
 from tqdm.notebook import tqdm
 import argparse
 import json
-import pickle
+# import pickle
 import shelve
 import matplotlib.pyplot as plt
 import time
 
 # %%
-main = Path("/homes/gws/hjyu/MaskSearchDemo/Scenario2Adversarial").resolve()
+# Set main path to scenario root directory (i.e. Scenario2Adversarial)
+main = Path(".").resolve()
 main
 
 # %%
